@@ -46,11 +46,11 @@ if __name__ == "__main__":
         os.path.join(args.data_location, "*.csv"),
         os.path.join(args.data_dropoff, "parquet"),
     )
-    print(f"To Parquet file saving took: {tac(s_time):.4f}s")
+    print(f"To Parquet file conversion took: {tac(s_time):.4f}s")
 
     s_time = tic()
     data_to_hdf5(
         os.path.join(args.data_location, "*.csv"),
         os.path.join(args.data_dropoff, "hdf", "*.hdf"),
     )
-    print(f"To HDF5 file saving took: {tac(s_time):.4f}s")
+    print(f"To HDF5 file conversion took: {tac(s_time):.4f}s")

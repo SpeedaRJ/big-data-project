@@ -12,3 +12,23 @@ While the raw data files are located at:
 ```bash
 /d/hpc/projects/FRI/bigdata/data/NYTickets
 ```
+
+## Data Format Conversion
+
+> To Parquet file conversion took: $841.37$s or $14$min using blocksize of $64 000 000$. That means it on average took $2.02$s to generate each of the 415 files (see below).
+
+> To HDF5 file conversion took: $4309.29$s or $71.82$min using blocksize of $640 000$. That means it on average took $0.1$s to generate each of the 42003 files (see below).
+
+# Task Solutions
+
+## Task 1
+
+| **Metric**                        | **CSV Format (in MB)** | **Parquet Format (in MB)** |  **HDF5 Format (in MB)** |
+|-------------------------------|--------------------|------------------------|------------------------|
+| *Number of files*               | 11                | 415                    | 42003 |
+| *Total file size*               | 25635             | 5309                   | 150431 |
+| *Average file size*             | 2330.45           | 12.79                  | 3.58 |
+| *File size standard deviation (SD)* | 561.83          | 1.92                   | 2.37 |
+| *Min file size*                 | 1710              | 9                      | 2 |
+| *Max file size*                 | 3839              | 18                     | 456 |
+
