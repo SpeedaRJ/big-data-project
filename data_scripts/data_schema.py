@@ -1,45 +1,69 @@
-DataSchema = {
-    "SummonsNumber": "float64",
-    "PlateID": "str",
-    "RegistrationState": "str",
-    "PlateType": "str",
-    "IssueDate": "str",
-    "ViolationCode": "float64",
-    "VehicleBodyType": "str",
-    "VehicleMake": "str",
-    "IssuingAgency": "str",
-    "StreetCode1": "float64",
-    "StreetCode2": "float64",
-    "StreetCode3": "float64",
-    "VehicleExpirationDate": "float64",
-    "Violation Location": "str",
-    "ViolationPrecinct": "float64",
-    "IssuePrecinct": "float64",
-    "IssuerCode": "float64",
-    "IssuerCommand": "str",
-    "Issuer Squad": "str",
-    "ViolationTime": "str",
-    "Time First Observed": "str",
-    "ViolationCounty": "str",
-    "ViolationInFrontOfOrOpposite": "str",
-    "House Number": "str",
-    "StreetName": "str",
-    "IntersectingStreet": "str",
-    "DateFirstObserved": "float64",
-    "LawSection": "float64",
-    "SubDivision": "str",
-    "Violation Legal Code": "str",
-    "DaysParkingInEffect": "str",
-    "FromHoursInEffect": "str",
-    "ToHoursInEffect": "str",
-    "VehicleColor": "str",
-    "Unregistered Vehicle?": "str",
-    "VehicleYear": "float64",
-    "MeterNumber": "str",
-    "FeetFromVurb": "float64",
-    "Violation Post Code": "str",
-    "Violation Description": "str",
-    "NoStandingOrStoppingViolation": "str",
-    "HydrantViolation": "str",
-    "DoubleParkingViolation": "str",
-}
+import pandas as pd
+
+
+class DataSchema:
+    schema = {
+        "Summons Number": pd.Int64Dtype(),
+        "Plate ID": pd.StringDtype(),
+        "Registration State": pd.StringDtype(),
+        "Plate Type": pd.StringDtype(),
+        "Violation Code": pd.Int64Dtype(),
+        "Vehicle Body Type": pd.StringDtype(),
+        "Vehicle Make": pd.StringDtype(),
+        "Issuing Agency": pd.StringDtype(),
+        "Street Code1": pd.Int64Dtype(),
+        "Street Code2": pd.Int64Dtype(),
+        "Street Code3": pd.Int64Dtype(),
+        "Vehicle Expiration Date": pd.Int64Dtype(),
+        "Violation Location": pd.Int64Dtype(),
+        "Violation Precinct": pd.Int64Dtype(),
+        "Issuer Precinct": pd.Int64Dtype(),
+        "Issuer Code": pd.Int64Dtype(),
+        "Issuer Command": pd.StringDtype(),
+        "Issuer Squad": pd.StringDtype(),
+        "Violation Time": pd.StringDtype(),
+        "Time First Observed": pd.StringDtype(),
+        "Violation County": pd.StringDtype(),
+        "Violation In Front Of Or Opposite": pd.StringDtype(),
+        "Number": pd.StringDtype(),
+        "Street": pd.StringDtype(),
+        "Intersecting Street": pd.StringDtype(),
+        "Date First Observed": pd.Int64Dtype(),
+        "Law Section": pd.Int64Dtype(),
+        "Sub Division": pd.StringDtype(),
+        "Violation Legal Code": pd.StringDtype(),
+        "Days Parking In Effect": pd.StringDtype(),
+        "From Hours In Effect": pd.StringDtype(),
+        "To Hours In Effect": pd.StringDtype(),
+        "Vehicle Color": pd.StringDtype(),
+        "Unregistered Vehicle?": pd.Int64Dtype(),
+        "Vehicle Year": pd.Int64Dtype(),
+        "Meter Number": pd.StringDtype(),
+        "Feet From Curb": pd.Int64Dtype(),
+        "Violation Post Code": pd.StringDtype(),
+        "Violation Description": pd.StringDtype(),
+        "No Standing or Stopping Violation": pd.Int64Dtype(),
+        "Hydrant Violation": pd.Int64Dtype(),
+        "Double Parking Violation": pd.Int64Dtype(),
+    }
+    dates = ["Issue Date"]
+
+    @staticmethod
+    def fill_na(data):
+        for col in data:
+            dt = data[col].dtype
+            if dt == pd.Int64Dtype():
+                data.fillna({col: -1}, inplace=True)
+            else:
+                data.fillna({col: ""}, inplace=True)
+        return data
+
+    @staticmethod
+    def to_primitive_dtypes(data):
+        d = dict.fromkeys(data.select_dtypes(pd.Int64Dtype()).columns, int)
+        data = data.astype(d)
+        d = dict.fromkeys(data.select_dtypes(pd.StringDtype()).columns, str)
+        data = data.astype(d)
+        for date_column in DataSchema.dates:
+            data[date_column] = ((data[date_column] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')).astype(int)
+        return data
