@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 
@@ -60,10 +61,10 @@ class DataSchema:
 
     @staticmethod
     def to_primitive_dtypes(data):
-        d = dict.fromkeys(data.select_dtypes(pd.Int64Dtype()).columns, int)
+        d = dict.fromkeys(data.select_dtypes(pd.Int64Dtype()).columns, np.int64)
         data = data.astype(d)
         d = dict.fromkeys(data.select_dtypes(pd.StringDtype()).columns, str)
         data = data.astype(d)
         for date_column in DataSchema.dates:
-            data[date_column] = ((data[date_column] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')).astype(int)
+            data[date_column] = pd.to_datetime(data[date_column]).astype(np.int64) // 10**6
         return data
