@@ -2,7 +2,6 @@
 curl https://data.cityofnewyork.us/api/views/pvqr-7yc4/rows.csv -o 2024.csv
 curl https://data.cityofnewyork.us/api/views/869v-vr48/rows.csv -o 2023.csv
 curl https://data.cityofnewyork.us/api/views/7mxj-7a6y/rows.csv -o 2022.csv
-curl https://data.cityofnewyork.us/api/views/pvqr-7yc4/rows.csv -o 2022.csv
 curl https://data.cityofnewyork.us/api/views/kvfd-bves/rows.csv -o 2021.csv
 curl https://data.cityofnewyork.us/api/views/p7t3-5i9s/rows.csv -o 2020.csv
 curl https://data.cityofnewyork.us/api/views/faiq-9dfq/rows.csv -o 2019.csv
