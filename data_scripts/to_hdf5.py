@@ -7,24 +7,26 @@ import h5py
 import numpy as np
 import pandas as pd
 from data_schema import DataSchema
+from tqdm import tqdm
 
 
 def process_type(type):
-    if type == np.int32:
+    if type == np.int64:
         return "int"
     if type == np.dtype("O"):
         return "S1"
-    return "datetime64[D]"
+    raise ValueError(f"Unknown type {type}")
 
 
 def save_to_hdf5(location, dropoff):
-    for file in os.listdir(location):
+    for file in tqdm(os.listdir(location)):
+        path = os.path.join(location, file)
+        year = int(Path(path).stem)
+        schema = DataSchema(year)
         data = pd.read_csv(
-            os.path.join(location, file),
-            dtype=DataSchema.schema,
-            parse_dates=DataSchema.dates,
+            path, dtype=schema.get_schema(path), parse_dates=schema.get_dates()
         )
-        data_processed = DataSchema.to_primitive_dtypes(DataSchema.fill_na(data))
+        data_processed = DataSchema.to_primitive_dtypes(DataSchema.fill_na(data), year)
         data_types = [
             (name, process_type(type)) for name, type in data_processed.dtypes.items()
         ]
@@ -55,4 +57,4 @@ if __name__ == "__main__":
         args.data_location,
         args.data_dropoff,
     )
-    print(f"To HDF5 file conversion took: {tac(s_time):.4f}s")
+    print(f"To HDF5 conversion took: {tac(s_time):.4f}s")

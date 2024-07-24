@@ -1,53 +1,95 @@
+import csv
+import os
+
 import numpy as np
 import pandas as pd
 
 
 class DataSchema:
-    schema = {
-        "Summons Number": pd.Int64Dtype(),
-        "Plate ID": pd.StringDtype(),
-        "Registration State": pd.StringDtype(),
-        "Plate Type": pd.StringDtype(),
-        "Violation Code": pd.Int64Dtype(),
-        "Vehicle Body Type": pd.StringDtype(),
-        "Vehicle Make": pd.StringDtype(),
-        "Issuing Agency": pd.StringDtype(),
-        "Street Code1": pd.Int64Dtype(),
-        "Street Code2": pd.Int64Dtype(),
-        "Street Code3": pd.Int64Dtype(),
-        "Vehicle Expiration Date": pd.Int64Dtype(),
-        "Violation Location": pd.Int64Dtype(),
-        "Violation Precinct": pd.Int64Dtype(),
-        "Issuer Precinct": pd.Int64Dtype(),
-        "Issuer Code": pd.Int64Dtype(),
-        "Issuer Command": pd.StringDtype(),
-        "Issuer Squad": pd.StringDtype(),
-        "Violation Time": pd.StringDtype(),
-        "Time First Observed": pd.StringDtype(),
-        "Violation County": pd.StringDtype(),
-        "Violation In Front Of Or Opposite": pd.StringDtype(),
-        "Number": pd.StringDtype(),
-        "Street": pd.StringDtype(),
-        "Intersecting Street": pd.StringDtype(),
-        "Date First Observed": pd.Int64Dtype(),
-        "Law Section": pd.Int64Dtype(),
-        "Sub Division": pd.StringDtype(),
-        "Violation Legal Code": pd.StringDtype(),
-        "Days Parking In Effect": pd.StringDtype(),
-        "From Hours In Effect": pd.StringDtype(),
-        "To Hours In Effect": pd.StringDtype(),
-        "Vehicle Color": pd.StringDtype(),
-        "Unregistered Vehicle?": pd.Int64Dtype(),
-        "Vehicle Year": pd.Int64Dtype(),
-        "Meter Number": pd.StringDtype(),
-        "Feet From Curb": pd.Int64Dtype(),
-        "Violation Post Code": pd.StringDtype(),
-        "Violation Description": pd.StringDtype(),
-        "No Standing or Stopping Violation": pd.Int64Dtype(),
-        "Hydrant Violation": pd.Int64Dtype(),
-        "Double Parking Violation": pd.Int64Dtype(),
-    }
-    dates = ["Issue Date"]
+    def __init__(self, year):
+        self.dates = ["Issue Date"]
+
+        self.summons_number = pd.Int64Dtype()
+        self.plate_id = pd.StringDtype()
+        self.registration_state = pd.StringDtype()
+        self.plate_type = pd.StringDtype()
+        self.violation_code = pd.Int64Dtype()
+        self.vehicle_body_type = pd.StringDtype()
+        self.vehicle_make = pd.StringDtype()
+        self.issuing_agency = pd.StringDtype()
+        self.street_code1 = pd.Int64Dtype()
+        self.street_code2 = pd.Int64Dtype()
+        self.street_code3 = pd.Int64Dtype()
+        if year not in [2015]:
+            self.vehicle_expiration_date = pd.Int64Dtype()
+        else:
+            self.vehicle_expiration_date = pd.StringDtype()
+        if year in [2024, 2017, 2016, 2015, 2014]:
+            self.violation_location = pd.StringDtype()
+        elif year in [2023, 2022, 2021, 2020, 2019, 2018]:
+            self.violation_location = pd.Int64Dtype()
+        self.violation_precinct = pd.Int64Dtype()
+        self.issuer_precinct = pd.Int64Dtype()
+        self.issuer_code = pd.Int64Dtype()
+        self.issuer_command = pd.StringDtype()
+        self.issuer_squad = pd.StringDtype()
+        self.violation_time = pd.StringDtype()
+        self.time_first_observed = pd.StringDtype()
+        self.violation_county = pd.StringDtype()
+        self.violation_in_front_of_or_opposite = pd.StringDtype()
+        if year == 2014:
+            self.number = pd.StringDtype()
+            self.street = pd.StringDtype()
+        else:
+            self.house_number = pd.StringDtype()
+            self.street_name = pd.StringDtype()
+        self.intersecting_street = pd.StringDtype()
+        if year not in [2015]:
+            self.date_first_observed = pd.Int64Dtype()
+        else:
+            self.date_first_observed = pd.StringDtype()
+        self.law_section = pd.Int64Dtype()
+        self.sub_division = pd.StringDtype()
+        self.violation_legal_code = pd.StringDtype()
+        self.days_parking_in_effect = pd.StringDtype()
+        self.from_hours_in_effect = pd.StringDtype()
+        self.to_hours_in_effect = pd.StringDtype()
+        self.vehicle_color = pd.StringDtype()
+        if year in [2024, 2017, 2016, 2015, 2014]:
+            self.unregistered_vehicle = pd.StringDtype()
+        else:
+            self.unregistered_vehicle = pd.Int64Dtype()
+        if year in [2024, 2022, 2021, 2020, 2019, 2018, 2017]:
+            self.vehicle_year = pd.Int64Dtype()
+        else:
+            self.vehicle_year = pd.StringDtype()
+        self.meter_number = pd.StringDtype()
+        self.feet_from_curb = pd.Int64Dtype()
+        self.violation_post_code = pd.StringDtype()
+        self.violation_description = pd.StringDtype()
+        self.no_standing_or_stopping_violation = pd.StringDtype()
+        self.hydrant_violation = pd.StringDtype()
+        self.double_parking_violation = pd.StringDtype()
+
+    def get_schema_dict(self):
+        return {key: value for key, value in self.__dict__.items() if key != "dates"}
+
+    def get_dates(self):
+        return self.dates
+
+    def get_schema(self, filename):
+        def parse_name(name):
+            return name.lower().strip().replace(" ", "_").replace("?", "")
+
+        schema = self.get_schema_dict()
+        with open(filename, "r") as infile:
+            reader = csv.DictReader(infile)
+            fieldnames = reader.fieldnames
+            return {
+                field: schema[parse_name(field)]
+                for field in fieldnames
+                if parse_name(field) in schema
+            }
 
     @staticmethod
     def fill_na(data):
@@ -60,11 +102,13 @@ class DataSchema:
         return data
 
     @staticmethod
-    def to_primitive_dtypes(data):
+    def to_primitive_dtypes(data, year):
         d = dict.fromkeys(data.select_dtypes(pd.Int64Dtype()).columns, np.int64)
         data = data.astype(d)
         d = dict.fromkeys(data.select_dtypes(pd.StringDtype()).columns, str)
         data = data.astype(d)
-        for date_column in DataSchema.dates:
-            data[date_column] = pd.to_datetime(data[date_column]).astype(np.int64) // 10**6
+        for date_column in DataSchema(year).get_dates():
+            data[date_column] = (
+                pd.to_datetime(data[date_column]).astype(np.int64) // 10**6
+            )
         return data

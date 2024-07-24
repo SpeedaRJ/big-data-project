@@ -1,6 +1,7 @@
 # big-data-project
 Repository aimed at holding the code, report, and results of the Big Data course project.
 
+> TODO: Change text in Running notes, it is no longer relevant.
 # Running Notes
 
 To get to the HPC data location for our data, run: 
@@ -29,11 +30,23 @@ We acquired weather information from the Kaggle [New York City Weather: A 154-Ye
 
 ## Task 1
 
-| **Metric**                        | **CSV Format (in MB)** | **Parquet Format (in MB)** |  **HDF5 Format (in MB)** |
-|-------------------------------|--------------------|------------------------|------------------------|
-| *Number of files*               | 11                | 415                    | 42003 |
-| *Total file size*               | 25635             | 5309                   | 150431 |
-| *Average file size*             | 2330.45           | 12.79                  | 3.58 |
-| *File size standard deviation (SD)* | 561.83          | 1.92                   | 2.37 |
-| *Min file size*                 | 1710              | 9                      | 2 |
-| *Max file size*                 | 3839              | 18                     | 456 |
+Below are displayed the file sizes after format conversion. Before any data has been cleaned, omitted, processed or removed. The only preprocessing step at this point was filling `None` values with either `0` or `''` based on the column data type. The `Issue Date` column, was also converted to the `np.int64` data type in the form of a UNIX timestamp, instead of the default `datetime` type.
+
+| **File Name** | **CSV Size [MD]** | **Parquet Size [MB]** | **HDF5 Size [MD]** |
+| ------------- | ----------------- | --------------------- | ------------------ |
+| *2014.csv*    |          1710.72  |        330.06         |        184.14      | 
+| *2015.csv*    |      2393.49      |         511.80        |        318.64      |
+| *2016.csv*    |    1971.17        |          352.62       |        192.56      |
+| *2017.csv*    |        1990.24    |        519.51         |       351.12       |
+| *2018.csv*    |    2073.71        |        401.29         |      232.82        |
+| *2019.csv*    |       1910.91     |        364.27         |       211.75       |
+| *2020.csv*    |     2214.43       |       382.20          |        216.46      |
+| *2021.csv*    |       2618.82     |         445.62        |      252.72        |
+| *2022.csv*    |        2645.07    |         418.49        |       218.41       |
+| *2023.csv*    |        3839.23    |         617.47        |        310.59      |
+| *2024.csv*    |      2645.07      |          418.49       |      216.27        |
+
+File conversions were performed locally, and file sizes were obtained using the following command:
+```pwsh
+ls | Select-Object Name, @{Name="MegaBytes";Expression={$_.Length / 1MB}}
+```

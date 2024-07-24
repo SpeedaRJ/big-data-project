@@ -5,16 +5,18 @@ from pathlib import Path
 
 import pandas as pd
 from data_schema import DataSchema
+from tqdm import tqdm
 
 
 def save_to_parquet(location, dropoff):
-    for file in os.listdir(location):
+    for file in tqdm(os.listdir(location)):
+        path = os.path.join(location, file)
+        year = int(Path(path).stem)
+        schema = DataSchema(year)
         data = pd.read_csv(
-            os.path.join(location, file),
-            dtype=DataSchema.schema,
-            parse_dates=DataSchema.dates,
+            path, dtype=schema.get_schema(path), parse_dates=schema.get_dates()
         )
-        data_processed = DataSchema.to_primitive_dtypes(DataSchema.fill_na(data))
+        data_processed = DataSchema.to_primitive_dtypes(DataSchema.fill_na(data), year)
         data_processed.to_parquet(os.path.join(dropoff, f"{Path(file).stem}.parquet"))
 
 
