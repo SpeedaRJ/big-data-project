@@ -2,6 +2,52 @@
 Repository aimed at holding the code, report, and results of the Big Data course project.
 
 > TODO: Change text in Running notes, it is no longer relevant.
+
+# Environment Setup
+
+```bash
+conda create -n BD_project python=3.10
+conda activate BD_project
+pip install numpy pandas pyarrow
+pip install notebook
+pip install matplotlib seaborn
+pip install tqdm
+pip install kafka-python confluent-kafka faust
+pip install duckdb
+```
+
+# Running the Code
+
+## Task 4 (Streaming)
+
+1. Set up kafka with docker (we use the same configuration as we used in the assignment)
+    ```bash
+    docker compose -f "./tasks/04/docker-compose.yml" up -d
+    ```
+    TODO: commands for deleting all of the currently stored data so we can start from scratch
+
+
+2. Run the consumer(s) - consume the specified topics containing rolling descriptive statistics.
+    ```bash
+    python ./tasks/04/simple_topic_consumer.py --topics <topic1> <topic2> <topic3> ... --save <False|True>
+    ```
+
+3. Run the stream processing program(s) that will consume raw data and produce rolling descriptive statistics.
+    ```bash
+    TODO
+    ```
+
+4. Run the producer - stream each line from specified raw files (We assume the data is chronologically ordered).
+    ```bash
+    python ./tasks/04/raw_data_producer.py --data-dir "./data/raw" --years <year1> <year2> <year3> ... --n-lines <number of lines to stream | -1 for whole file>
+    ```
+
+
+## Task N
+TODO
+
+
+
 # Running Notes
 
 To get to the HPC data location for our data, run: 
