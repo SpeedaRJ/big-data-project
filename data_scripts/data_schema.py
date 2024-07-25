@@ -1,5 +1,4 @@
 import csv
-import os
 
 import numpy as np
 import pandas as pd
@@ -72,12 +71,38 @@ class DataSchema:
         self.double_parking_violation = pd.StringDtype()
 
     def get_schema_dict(self):
+        """
+        Generates a dictionary representation of the object's attributes, excluding the 'dates' attribute.
+
+        Returns:
+            dict: A dictionary containing the object's attributes and their values, excluding the 'dates' attribute.
+        """
         return {key: value for key, value in self.__dict__.items() if key != "dates"}
 
     def get_dates(self):
+        """
+        Retrieves the 'dates' attribute of the object.
+
+        Returns:
+            list: The 'dates' attribute, which is expected to be a list of date values.
+        """
         return self.dates
 
     def get_schema(self, filename):
+        """
+        Reads a CSV file and maps its field names to the corresponding schema attributes.
+
+        Args:
+            filename (str): The path to the CSV file to read.
+
+        Returns:
+            dict: A dictionary where the keys are the field names from the CSV file and the values are the corresponding schema attributes.
+
+        This function performs the following steps:
+        1. Reads the schema dictionary using `self.get_schema_dict()`.
+        2. Reads the CSV file and extracts its field names.
+        3. Maps each field name to the corresponding schema attribute, if it exists in the schema dictionary.
+        """
         def parse_name(name):
             return name.lower().strip().replace(" ", "_").replace("?", "")
 
@@ -93,6 +118,21 @@ class DataSchema:
 
     @staticmethod
     def fill_na(data):
+        """
+        Fills missing values in the DataFrame with specified default values based on column data types.
+
+        Args:
+            data (pd.DataFrame): The DataFrame to fill missing values in.
+
+        Returns:
+            pd.DataFrame: The DataFrame with missing values filled.
+
+        This function performs the following steps:
+        1. Iterates over each column in the DataFrame.
+        2. Checks the data type of the column.
+        3. Fills missing values with -1 for columns with integer data type.
+        4. Fills missing values with an empty string for columns with other data types.
+        """
         for col in data:
             dt = data[col].dtype
             if dt == pd.Int64Dtype():
@@ -103,6 +143,24 @@ class DataSchema:
 
     @staticmethod
     def to_primitive_dtypes(data, year):
+        """
+        Converts the data types of the DataFrame columns to primitive types and processes date columns.
+
+        Args:
+            data (pd.DataFrame): The DataFrame whose columns' data types need to be converted.
+            year (int): The fiscal year used to retrieve date columns from the DataSchema.
+
+        Returns:
+            pd.DataFrame: The DataFrame with columns converted to primitive data types and date columns processed.
+
+        This function performs the following steps:
+        1. Converts columns with integer data type to `np.int64`.
+        2. Converts columns with string data type to `str`.
+        3. Converts date columns to Unix timestamp in milliseconds.
+
+        Note:
+            The date columns are retrieved using the `get_dates` method of the `DataSchema` class.
+        """
         d = dict.fromkeys(data.select_dtypes(pd.Int64Dtype()).columns, np.int64)
         data = data.astype(d)
         d = dict.fromkeys(data.select_dtypes(pd.StringDtype()).columns, str)

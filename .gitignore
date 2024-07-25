@@ -1,8 +1,7 @@
 # project specific
 .vscode/
 data/
-
-
+*.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

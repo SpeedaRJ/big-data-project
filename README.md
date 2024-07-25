@@ -1,7 +1,7 @@
 # big-data-project
 Repository aimed at holding the code, report, and results of the Big Data course project.
 
-> TODO: Change text in Running notes, it is no longer relevant.
+> TODO: Change text in Running notes, some of it is no longer relevant.
 
 # Environment Setup
 
@@ -48,6 +48,7 @@ TODO
 
 
 
+> TODO: Change Task 1 code, as it no longer aligns with the previous approach.
 # Running Notes
 
 To get to the HPC data location for our data, run: 
