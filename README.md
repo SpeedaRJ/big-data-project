@@ -12,7 +12,7 @@ pip install numpy pandas pyarrow
 pip install notebook
 pip install matplotlib seaborn
 pip install tqdm
-pip install kafka-python confluent-kafka faust
+pip install kafka-python confluent-kafka faust faust-streaming
 pip install duckdb
 ```
 
@@ -34,7 +34,7 @@ pip install duckdb
 
 3. Run the stream processing program(s) that will consume raw data and produce rolling descriptive statistics.
     ```bash
-    TODO
+    python ./tasks/04/stream_processing.py worker -l info
     ```
 
 4. Run the producer - stream each line from specified raw files (We assume the data is chronologically ordered).
