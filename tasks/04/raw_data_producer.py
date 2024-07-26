@@ -5,6 +5,58 @@ from kafka import KafkaProducer
 
 BOOTSTRAP_SERVERS = "localhost:29092"
 TOPIC = "raw-data"
+# all columns contained in the csv files
+ALL_COLUMNS = [
+    "Summons Number",
+    "Plate ID",
+    "Registration State",
+    "Plate Type",
+    "Issue Date",
+    "Violation Code",
+    "Vehicle Body Type",
+    "Vehicle Make",
+    "Issuing Agency",
+    "Street Code1",
+    "Street Code2",
+    "Street Code3",
+    "Vehicle Expiration Date",
+    "Violation Location",
+    "Violation Precinct",
+    "Issuer Precinct",
+    "Issuer Code",
+    "Issuer Command",
+    "Issuer Squad",
+    "Violation Time",
+    "Time First Observed",
+    "Violation County",
+    "Violation In Front Of Or Opposite",
+    "House Number", # 2014 has just "Number" instead of "House Number"
+    "Street Name", # 2014 has just "Street" instead of "Street Name"
+    "Intersecting Street",
+    "Date First Observed",
+    "Law Section",
+    "Sub Division",
+    "Violation Legal Code",
+    "Days Parking In Effect",
+    "From Hours In Effect",
+    "To Hours In Effect",
+    "Vehicle Color",
+    "Unregistered Vehicle?",
+    "Vehicle Year",
+    "Meter Number",
+    "Feet From Curb",
+    "Violation Post Code",
+    "Violation Description",
+    "No Standing or Stopping Violation",
+    "Hydrant Violation",
+    "Double Parking Violation"
+]
+COLUMN_MAPPING = {
+    "Number": "House Number", # 2014
+    "Street": "Street Name", # 2014
+    "Days Parking In Effect    ": "Days Parking In Effect" # until 2019
+}
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Produce data to Kafka")
@@ -26,7 +78,24 @@ def producer(file_path, n_lines):
             fields = line.strip().split(",")
             
             # TODO: send only fields that we will use in the stream processing
-            line_dict = {column: field for column, field in zip(columns, fields)}
+            line_dict = {}
+            for col, field in zip(columns, fields):
+                # map mistakes in the column names
+                if col in COLUMN_MAPPING.keys():
+                    col = COLUMN_MAPPING[col]
+                
+                # notify if column is not in the list of all columns
+                if col not in ALL_COLUMNS:
+                    print(f"Column {col} not in ALL_COLUMNS")
+                    continue
+                
+                # notify if we are missing a column
+                if len(columns) != len(ALL_COLUMNS):
+                    print(f"Missing columns in the file")
+                    continue
+                
+                col = col.strip().lower().replace(" ", "_").replace("?", "")
+                line_dict[col] = field
             
             producer.send(topic=TOPIC, value=line_dict)
             count += 1

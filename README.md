@@ -75,7 +75,7 @@ In order to allow for better processing and data enrichment down the line, we th
 
 3. Run the stream processing program(s) that will consume raw data and produce rolling descriptive statistics.
     ```bash
-    TODO
+    python ./tasks/04/stream_processing.py worker -l info
     ```
 
 4. Run the producer - stream each line from specified raw files (We assume the data is chronologically ordered).
