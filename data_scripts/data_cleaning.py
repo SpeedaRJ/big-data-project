@@ -1,12 +1,5 @@
-import argparse
-import os
-from pathlib import Path
-
-import h5py
 import numpy as np
 import pandas as pd
-from to_hdf5 import read_hdf5, process_type
-from to_parquet import read_parquet
 from tqdm import tqdm
 
 fiscal_year = lambda year: (
@@ -34,25 +27,6 @@ def filter_rows_by_date(dataframe, year):
     return dataframe.apply(fiscal_row_filter, axis=1)
 
 
-def get_data_by_year(path, parquet=True):
-    """
-    Reads data files from the specified directory and organizes them by year.
-
-    Args:
-        path (str): The directory path containing the data files.
-        parquet (bool, optional): If True, read files as Parquet format. If False, read files as HDF5 format. Defaults to True.
-
-    Returns:
-        dict: A dictionary where keys are years (int) and values are the corresponding data read from the files.
-    """
-    data = {}
-    for file in tqdm(os.listdir(path)):
-        file_path = os.path.join(path, file)
-        year = int(Path(file_path).stem)
-        data[year] = read_parquet(file_path) if parquet else read_hdf5(file_path)
-    return data
-
-
 def require_fiscal_year(data):
     """
     Filters the data for each fiscal year in the given dictionary.
@@ -63,7 +37,7 @@ def require_fiscal_year(data):
     Returns:
         dict: A dictionary with the same structure, but with DataFrames filtered by the corresponding fiscal year.
     """
-    for year in tqdm(data.keys()):
+    for year in tqdm(data.keys(), desc="Filtering by fiscal year"):
         data[year] = data[year][filter_rows_by_date(data[year], year)]
     return data
 
@@ -121,7 +95,7 @@ def unify_column_names_and_dtypes(data):
     naming_convention = {}
     typing_convention = {}
 
-    for year in data.keys():
+    for year in tqdm(data.keys(), desc="Acquiring value frequencies by column"):
         for i, (column, dtype) in enumerate(zip(data[year].columns, data[year].dtypes)):
             if i not in naming_convention:
                 naming_convention[i] = []
@@ -148,10 +122,10 @@ def unify_column_names_and_dtypes(data):
         for _, counting_data in typing_convention.items()
     ]
 
-    type_dict = {column: dtype for column, dtype in zip(data[-1].columns, column_types)}
+    type_dict = {column: dtype for column, dtype in zip(column_names, column_types)}
     type_dict["Unregistered Vehicle?"] = np.dtype("O")
 
-    for year in data.keys():
+    for year in tqdm(data.keys(), desc="Setting appropriate data types"):
         data[year].columns = column_names
         parsed = False
         while not parsed:
@@ -185,7 +159,7 @@ def remove_mostly_null_files(data):
     """
     column_value_frequencies = {}
 
-    for column in data.columns:
+    for column in tqdm(data.columns, desc="Generating value counts"):
         counts = data[column].value_counts()
         column_value_frequencies[column] = (counts.index, counts.values / len(data))
 
@@ -195,7 +169,7 @@ def remove_mostly_null_files(data):
     ]  # Comes from the DataSchema.to_primitive_dtypes() static method and hand_curated_type_definitions() function
     columns_to_remove = []
 
-    for column in column_value_frequencies:
+    for column in tqdm(column_value_frequencies, desc="Acquiring removable columns"):
         values = column_value_frequencies[column][0]
         frequencies = column_value_frequencies[column][1]
         frequencies_of_nullable_values = np.array(
@@ -212,40 +186,3 @@ def remove_mostly_null_files(data):
             columns_to_remove.append(column)
 
     return data.drop(columns=columns_to_remove)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("parquet_location", type=str)
-    parser.add_argument("hdf5_location", type=str)
-    args = parser.parse_args()
-
-    parquet_data = get_data_by_year(args.parquet_location)
-    hdf5_data = get_data_by_year(args.hdf5_location, parquet=False)
-
-    parquet_data = require_fiscal_year(parquet_data)
-    hdf5_data = require_fiscal_year(hdf5_data)
-
-    parquet_data = unify_column_names_and_dtypes(parquet_data)
-    hdf5_data = unify_column_names_and_dtypes(hdf5_data)
-
-    parquet_data_concat = pd.concat(
-        [parquet_data[year] for year in parquet_data.keys()]
-    )
-    hdf5_data_concat = pd.concat([hdf5_data[year] for year in hdf5_data.keys()])
-
-    parquet_data_concat = remove_mostly_null_files(parquet_data_concat)
-    hdf5_data_concat = remove_mostly_null_files(hdf5_data_concat)
-
-    parquet_data_concat.to_parquet(f"{args.parquet_location}/full_data.parquet")
-    
-    data_types = [
-        (name, process_type(type)) for name, type in hdf5_data_concat.dtypes.items()
-    ]
-    array = np.empty(len(hdf5_data_concat), dtype=data_types)
-    for column in hdf5_data_concat.columns:
-        array[column] = hdf5_data_concat[column]
-    with h5py.File(f"{args.hdf5_location}/full_data.h5", "w") as h5df:
-        h5df.create_dataset(
-            "data", data=array, compression="gzip", compression_opts=9
-        )

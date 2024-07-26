@@ -8,22 +8,20 @@ from data_schema import DataSchema
 from tqdm import tqdm
 
 
-def save_to_parquet(location, dropoff):
+def csv_to_parquet(location, dropoff):
     """
-    Reads CSV files from a specified directory, processes the data, and saves it to Parquet format.
+    Convert CSV files in the specified location to Parquet files.
 
-    Args:
-        location (str): The directory path containing the CSV files to be processed.
-        dropoff (str): The directory path where the Parquet files will be saved.
+    This function reads CSV files from the given location, processes the data
+    according to the schema for each year, and saves the processed data to Parquet files
+    in the specified dropoff directory.
 
-    This function performs the following steps:
-    1. Iterates over each file in the specified directory.
-    2. Reads the CSV file and applies the schema for the corresponding year.
-    3. Processes the data by filling missing values and converting data types to primitive types.
-    4. Saves the processed DataFrame to a Parquet file.
+    Parameters:
+    location (str): The directory containing the CSV files to be processed.
+    dropoff (str): The directory where the Parquet files will be saved.
 
-    Note:
-        The schema and data processing are handled by the `DataSchema` class and its methods.
+    Returns:
+    None
     """
     for file in tqdm(os.listdir(location)):
         path = os.path.join(location, file)
@@ -33,7 +31,22 @@ def save_to_parquet(location, dropoff):
             path, dtype=schema.get_schema(path), parse_dates=schema.get_dates()
         )
         data_processed = DataSchema.to_primitive_dtypes(DataSchema.fill_na(data), year)
-        data_processed.to_parquet(os.path.join(dropoff, f"{Path(file).stem}.parquet"))
+        save_to_parquet(data_processed, dropoff, year)
+
+
+def save_to_parquet(data, dropoff, year):
+    """
+    Save the given data to a Parquet file.
+
+    Parameters:
+    data (DataFrame): The data to be saved.
+    dropoff (str): The directory where the Parquet file will be saved.
+    year (int): The year to be used in the filename.
+
+    Returns:
+    None
+    """
+    data.to_parquet(os.path.join(dropoff, f"{year}.parquet"))
 
 
 def read_parquet(path):
@@ -67,7 +80,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     s_time = tic()
-    save_to_parquet(
+    csv_to_parquet(
         args.data_location,
         args.data_dropoff,
     )

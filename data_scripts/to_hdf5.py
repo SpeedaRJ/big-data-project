@@ -36,23 +36,20 @@ def process_type(type):
     raise ValueError(f"Unknown type {type}")
 
 
-def save_to_hdf5(location, dropoff):
+def csv_to_hdf5(location, dropoff):
     """
-    Reads CSV files from a specified directory, processes the data, and saves it to HDF5 format.
+    Convert CSV files in the specified location to HDF5 files.
 
-    Args:
-        location (str): The directory path containing the CSV files to be processed.
-        dropoff (str): The directory path where the HDF5 files will be saved.
+    This function reads CSV files from the given location, processes the data
+    according to the schema for each year, and saves the processed data to HDF5 files
+    in the specified dropoff directory.
 
-    This function performs the following steps:
-    1. Iterates over each file in the specified directory.
-    2. Reads the CSV file and applies the schema for the corresponding year.
-    3. Processes the data by filling missing values and converting data types to primitive types.
-    4. Converts the processed DataFrame to a structured NumPy array.
-    5. Saves the structured array to an HDF5 file with gzip compression.
+    Parameters:
+    location (str): The directory containing the CSV files to be processed.
+    dropoff (str): The directory where the HDF5 files will be saved.
 
-    Note:
-        The schema and data processing are handled by the `DataSchema` class and its methods.
+    Returns:
+    None
     """
     for file in tqdm(os.listdir(location)):
         path = os.path.join(location, file)
@@ -62,16 +59,29 @@ def save_to_hdf5(location, dropoff):
             path, dtype=schema.get_schema(path), parse_dates=schema.get_dates()
         )
         data_processed = DataSchema.to_primitive_dtypes(DataSchema.fill_na(data), year)
-        data_types = [
-            (name, process_type(type)) for name, type in data_processed.dtypes.items()
-        ]
-        array = np.empty(len(data_processed), dtype=data_types)
-        for column in data_processed.columns:
-            array[column] = data_processed[column]
-        with h5py.File(os.path.join(dropoff, f"{Path(file).stem}.h5"), "w") as h5df:
-            h5df.create_dataset(
-                "data", data=array, compression="gzip", compression_opts=9
-            )
+        save_to_hdf5(data_processed, dropoff, year)
+
+
+def save_to_hdf5(data_processed, dropoff, year):
+    """
+    Save the processed data to an HDF5 file.
+
+    Parameters:
+    data_processed (DataFrame): The processed data to be saved.
+    dropoff (str): The directory where the HDF5 file will be saved.
+    year (int): The year to be used in the filename.
+
+    Returns:
+    None
+    """
+    data_types = [
+        (name, process_type(type)) for name, type in data_processed.dtypes.items()
+    ]
+    array = np.empty(len(data_processed), dtype=data_types)
+    for column in data_processed.columns:
+        array[column] = data_processed[column]
+    with h5py.File(os.path.join(dropoff, f"{year}.h5"), "w") as h5df:
+        h5df.create_dataset("data", data=array, compression="gzip", compression_opts=9)
 
 
 def read_hdf5(path):
@@ -93,14 +103,17 @@ def read_hdf5(path):
     Note:
         The schema is retrieved using the `get_schema` method of the `DataSchema` class.
     """
+    columns = list(
+        DataSchema(int(Path(path).stem))
+        .get_schema(f"{os.path.splitext(path)[0].replace('hdf5', 'raw')}.csv")
+        .keys()
+    )
+    columns.insert(5, "Issue Date")
     data = []
     with h5py.File(path, "r") as f:
         data = f["data"][()]
 
-    return pd.DataFrame(
-        data,
-        columns=DataSchema(2014).get_schema(f"{os.path.splitext(path)[0]}.csv").keys(),
-    )
+    return pd.DataFrame(data, columns=columns)
 
 
 if __name__ == "__main__":
@@ -117,7 +130,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     s_time = tic()
-    save_to_hdf5(
+    csv_to_hdf5(
         args.data_location,
         args.data_dropoff,
     )
