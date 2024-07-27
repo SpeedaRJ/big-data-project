@@ -7,6 +7,35 @@ Repository aimed at holding the code, report, and results of the Big Data course
 conda env create -f env.yaml
 ```
 
+# Repository Overview
+
+Directory tree view of the repository
+
+```sh
+.
+├── data
+│   ├── additional_data
+│   │   ├── businesses
+│   │   ├── events
+│   │   ├── landmarks
+│   │   ├── schools
+│   │   └── weather
+│   ├── meta_data
+│   └── parking_tickets
+│       ├── hdf5
+│       ├── parquet
+│       └── raw
+├── data_scripts
+│   └── data_augmentations
+├── notebooks
+├── results
+│   └── ...
+├── scripts
+└── tasks
+    ├── 01
+    └── ...
+```
+
 # Running Notes
 
 The raw data files are located at:
