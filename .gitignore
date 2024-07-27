@@ -1,10 +1,10 @@
 # project specific
 .vscode/
-data/
+data/parking_tickets/
 *.pickle
 
-additional_data/events/
-additional_data/businesses/
+data/additional_data/events/
+data/additional_data/businesses/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
