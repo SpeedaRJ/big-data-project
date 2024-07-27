@@ -3,6 +3,9 @@
 data/
 *.pickle
 
+additional_data/events/
+additional_data/businesses/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
