@@ -47,10 +47,10 @@ if __name__ == "__main__":
     data_concat = remove_mostly_null_files(data_concat)
 
     print("Saving data to parquet")
-    save_to_parquet(data_concat, args.parquet_location, "full_data")
+    save_to_parquet(data_concat, args.parquet_location, "full_data_cleaned")
     
     print("Saving data to hdf5")
-    save_to_hdf5(data_concat, args.hdf5_location, "full_data")
+    save_to_hdf5(data_concat, args.hdf5_location, "full_data_cleaned")
 
     print("Saving data to csv")
-    data_concat.to_csv(os.path.join(args.csv_location, "full_data.csv"), index=False)
+    data_concat.to_csv(os.path.join(args.csv_location, "full_data_cleaned.csv"), index=False)

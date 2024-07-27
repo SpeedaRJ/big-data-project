@@ -74,7 +74,7 @@ ls | Select-Object Name, @{Name="MegaBytes";Expression={$_.Length / 1MB}}
 
 > Note: A solution script can also be found in `big-data-project\tasks\01`, to list all file sizes either in a structured directory (with `raw`, `parquet` and `hdf5` sub-folders) or 3 separate directories.
 
-## File Preprocessing
+### File Preprocessing
 
 In order to allow for better processing and data enrichment down the line, we then performed some preprocessing steps on the above that. To simplify things, we re-read the `*.csv` files. To avoid repeating the same actions on the `parquet` and `hdf5` data files. We did the following:
 1. We limited the data from each year, to the fiscal year as denoted in the data description on the official website. The fiscal year, refers to the period `year - 1/7/1` to `year/6/30`.
@@ -87,6 +87,11 @@ In order to allow for better processing and data enrichment down the line, we th
 | **File Name**  | **CSV Size [GB]** | **Parquet Size [GB]** | **HDF5 Size [GB]** |
 | -------------- | ----------------- | --------------------- | ------------------ |
 | *full_dataset* | 20.96             | 4.46                  | 2.3                |
+
+To pre-process the CSV files, run the following command, where the paths refer to where the original raw `csv` files are located, and where you want to store the full dataset in parquet and hdf5 formats:
+```sh
+python ./process_csvs.py <csv_path> <parquet_path>  <hdf5_path>
+```
 
 ## Task 4 (Streaming)
 
