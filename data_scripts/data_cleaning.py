@@ -139,7 +139,7 @@ def unify_column_names_and_dtypes(data):
     return data
 
 
-def remove_mostly_null_files(data):
+def remove_mostly_null_columns(data):
     """
     Removes columns from the DataFrame that have more than 75% of their values as null or placeholder values.
 
