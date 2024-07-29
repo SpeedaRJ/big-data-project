@@ -25,7 +25,7 @@ def closest_point_join(ddf1: dd.DataFrame, ddf2: dd.DataFrame, ddf1_lat_name='la
     # Ensure ddf2 has proper divisions for indexing
     ddf2 = ddf2.set_index(ddf2.index, sorted=True)
     
-    concatenated = dd.concat([ddf1, dd.from_pandas(pd.Series(min_distances, name='min_distance')), ddf2], axis=1)
+    concatenated = dd.concat([ddf1, dd.from_pandas(pd.Series(min_distances, name='min_distance')), ddf2.loc[min_indices]], axis=1)
     return concatenated
 
 
