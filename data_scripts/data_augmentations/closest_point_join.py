@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import dask
 import dask.dataframe as dd
+from dask.dataframe.shuffle import compute_divisions
 from haversine import haversine
 
 
@@ -53,6 +54,17 @@ def demo():
 def schools_demo():
     high_schools = dd.read_csv("./data/additional_data/schools/high_schools_NYC_2021_processed.csv")
     middle_schools = dd.read_csv("./data/additional_data/schools/middle_schools_NYC_2021_processed.csv")
+    
+    high_schools = pd.read_csv("./data/additional_data/schools/high_schools_NYC_2021_processed.csv")
+    high_schools = dd.from_pandas(high_schools)
+    middle_schools = pd.read_csv("./data/additional_data/schools/middle_schools_NYC_2021_processed.csv")
+    middle_schools = dd.from_pandas(middle_schools)
+    
+    # high_schools = high_schools.repartition(npartitions=2)
+    # # compute partition divisions manually because dask is stupid and doesn't do it automatically AUGHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+    # high_school_divisions = compute_divisions(high_schools)
+    # middle_school_divisions = compute_divisions(middle_schools)
+    
     
     res = closest_point_join(high_schools, middle_schools, ddf1_lat_name='Latitude', ddf1_lon_name='Longitude', ddf2_lat_name='Latitude', ddf2_lon_name='Longitude')
     res = res.compute()
