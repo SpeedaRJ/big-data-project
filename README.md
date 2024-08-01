@@ -43,6 +43,8 @@ The raw data files are located at:
 /d/hpc/projects/FRI/bigdata/data/NYTickets
 ```
 
+## Parsing the Street Codes
+
 We obtained a dataset of the street code - name combinations from the [NYC Dataset website](https://data.cityofnewyork.us/City-Government/Street-Name-Dictionary/w4v2-rv6b/about_data ). The data came in the form of a text file, which we made a parser for (located in `big-data-project\meta_data`). This parser uses the Nominatim web API to obtain the necessary information about the streets (latitude and longitude) which we can later use for joining the secondary datasets. In the process of parsing the street codes, we are also creating a look-up table, which we can use to enrich the dataset, instead of relying on the API while streaming the dataset or otherwise processing it.
 
 Information on the meaning of the street codes was found on [Geosupport](https://nycplanning.github.io/Geosupport-UPG/chapters/chapterIV/chapterIV/).
@@ -50,6 +52,8 @@ Information on the meaning of the street codes was found on [Geosupport](https:/
 # Task Solutions
 
 ## Task 1
+
+> NOTE: The below file conversions and base data preprocessing steps were done locally, and therefore we used `pandas` to simplify the process. Consequent tasks were done using `dask` and `duckdb` as required.
 
 Below are displayed the file sizes after format conversion. Before any data has been cleaned, omitted, processed or removed. The only preprocessing step at this point was filling `None` values with either `-1` or `''` based on the column data type. The `Issue Date` column, was also converted to the `np.int64` data type in the form of a UNIX timestamp, instead of the default `datetime` type.
 
@@ -81,17 +85,23 @@ In order to allow for better processing and data enrichment down the line, we th
 2. Then we unified the column names, and made sure that they don't contain any whitespace characters.
 3. In addition, we also unified the column data types, since these in some cases had conflicting descriptions in the yearly reports.
 4. Lastly, after combining all the yearly data into a single data frame, we performed an analysis of nullable values for each column. We remove the columns, where we encounter more than $75\%$ of nullable values.
+5. Then, since most of our data augmentations revolve around location, we limited the data to only those rows, which have at least one of 3 street codes present, and removed the rest. Then following that, since we require the borough of the location (to avoid repeated street codes which are unique only inside a borough) we removed all rows which do not have a specified violation county. We followed this up by unifying the borough names, and removing a few instances of unidentifiable boroughs (PXA, USA, 0000, etc.).
+6. Lastly we localize each of the entries via their street codes for which we obtained the Latitude and Longitude previously. We perform the localization by checking which of the 3 street codes are given for each entry, and compute the average of the given street code coordinates. For some street codes we were unable to obtain the coordinates from the API, thus some entries had a coordinate pair of `(0,0)`, which we removed. This left us with about 80 million remaining data entries, and file sizes in different formats as displayed in the table below.
 
 > Note: Nullable values above refer to either `''` for string data types, or `-1` for numeric data types. Since, we assume that 0 can be a value of the dataset in some cases.
 
 | **File Name**  | **CSV Size [GB]** | **Parquet Size [GB]** | **HDF5 Size [GB]** |
 | -------------- | ----------------- | --------------------- | ------------------ |
-| *full_dataset* | 20.96             | 4.46                  | 2.3                |
+| *full_dataset* | 16.33             | 3.32                  | 2.44               |
 
 To pre-process the CSV files, run the following command, where the paths refer to where the original raw `csv` files are located, and where you want to store the full dataset in parquet and hdf5 formats:
 ```sh
 python ./process_csvs.py <csv_path> <parquet_path>  <hdf5_path>
 ```
+
+## Task 2
+
+> TODO
 
 ## Task 4 (Streaming)
 

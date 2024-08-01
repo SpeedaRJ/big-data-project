@@ -18,7 +18,7 @@ def process_type(type):
         type (np.dtype): The NumPy data type to convert.
 
     Returns:
-        str: The string representation of the data type. Returns "int" for `np.int64` and "S1" for object type.
+        str: The string representation of the data type. Returns "int" for `np.int64`, "S1" for object type, "float" for np.float64.
 
     Raises:
         ValueError: If the data type is not recognized.
@@ -33,6 +33,8 @@ def process_type(type):
         return "int"
     if type == np.dtype("O"):
         return "S1"
+    if type == np.float64:
+        return "float"
     raise ValueError(f"Unknown type {type}")
 
 

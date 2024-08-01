@@ -12,6 +12,9 @@ class DataSchema:
         self.plate_id = pd.StringDtype()
         self.registration_state = pd.StringDtype()
         self.plate_type = pd.StringDtype()
+        if year in [2000]:
+            self.issue_date = pd.Int64Dtype()
+            self.dates = []
         self.violation_code = pd.Int64Dtype()
         self.vehicle_body_type = pd.StringDtype()
         self.vehicle_make = pd.StringDtype()
@@ -25,7 +28,7 @@ class DataSchema:
             self.vehicle_expiration_date = pd.StringDtype()
         if year in [2024, 2017, 2016, 2015, 2014]:
             self.violation_location = pd.StringDtype()
-        elif year in [2023, 2022, 2021, 2020, 2019, 2018]:
+        elif year in [2000, 2023, 2022, 2021, 2020, 2019, 2018]:
             self.violation_location = pd.Int64Dtype()
         self.violation_precinct = pd.Int64Dtype()
         self.issuer_precinct = pd.Int64Dtype()
@@ -54,11 +57,11 @@ class DataSchema:
         self.from_hours_in_effect = pd.StringDtype()
         self.to_hours_in_effect = pd.StringDtype()
         self.vehicle_color = pd.StringDtype()
-        if year in [2024, 2017, 2016, 2015, 2014]:
+        if year in [2000, 2024, 2017, 2016, 2015, 2014]:
             self.unregistered_vehicle = pd.StringDtype()
         else:
             self.unregistered_vehicle = pd.Int64Dtype()
-        if year in [2024, 2022, 2021, 2020, 2019, 2018, 2017]:
+        if year in [2000, 2024, 2022, 2021, 2020, 2019, 2018, 2017]:
             self.vehicle_year = pd.Int64Dtype()
         else:
             self.vehicle_year = pd.StringDtype()
