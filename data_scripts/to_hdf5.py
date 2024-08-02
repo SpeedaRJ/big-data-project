@@ -1,6 +1,5 @@
 import argparse
 import os
-import time
 from pathlib import Path
 
 import h5py
@@ -120,20 +119,13 @@ def read_hdf5(path):
 
 if __name__ == "__main__":
 
-    def tic():
-        return time.time()
-
-    def tac(tic):
-        return time.time() - tic
-
     parser = argparse.ArgumentParser()
     parser.add_argument("data_location", type=str)
     parser.add_argument("data_dropoff", type=str)
     args = parser.parse_args()
 
-    s_time = tic()
     csv_to_hdf5(
         args.data_location,
         args.data_dropoff,
     )
-    print(f"To HDF5 conversion took: {tac(s_time):.4f}s")
+    print(f"To HDF5 conversion finished")
