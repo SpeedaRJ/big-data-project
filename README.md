@@ -43,6 +43,11 @@ The raw data files are located at:
 /d/hpc/projects/FRI/bigdata/data/NYTickets
 ```
 
+All of our data on the hpc is located in the `data` folder at:
+```bash
+/d/hpc/projects/FRI/bigdata/students/lsrj
+```
+
 ## Parsing the Street Codes
 
 We obtained a dataset of the street code - name combinations from the [NYC Dataset website](https://data.cityofnewyork.us/City-Government/Street-Name-Dictionary/w4v2-rv6b/about_data ). The data came in the form of a text file, which we made a parser for (located in `big-data-project\meta_data`). This parser uses the Nominatim web API to obtain the necessary information about the streets (latitude and longitude) which we can later use for joining the secondary datasets. In the process of parsing the street codes, we are also creating a look-up table, which we can use to enrich the dataset, instead of relying on the API while streaming the dataset or otherwise processing it.
@@ -102,6 +107,10 @@ python ./process_csvs.py <csv_path> <parquet_path>  <hdf5_path>
 ## Task 2
 
 > TODO
+
+```bash
+srun python data_scripts/lat_lon_join.py --df1_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/parking_tickets/parquet/full_data_cleaned.parquet" --df1_key "Summons Number" --df2_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/additional_data/schools/high_schools_NYC_2021_processed.csv" --df2_key "school_name" --output_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/aggregated_data" --output_name "tickets_high_schools_agg"
+```
 
 ## Task 4 (Streaming)
 
