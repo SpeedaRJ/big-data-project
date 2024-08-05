@@ -112,6 +112,12 @@ python ./process_csvs.py <csv_path> <parquet_path>  <hdf5_path>
 srun python data_scripts/lat_lon_join.py --df1_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/parking_tickets/parquet/full_data_cleaned.parquet" --df1_key "Summons Number" --df2_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/additional_data/schools/high_schools_NYC_2021_processed.csv" --df2_key "school_name" --output_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/aggregated_data" --output_name "tickets_high_schools_agg"
 ```
 
+Weather data
+```bash
+srun python data_scripts/data_augmentations/add_weather_data.py --tickets_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/parking_tickets/parquet/full_data_cleaned.parquet" --weather_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/additional_data/schools/high_schools_NYC_2021_processed.csv" --output_location "/d/hpc/projects/FRI/bigdata/students/lsrj/data/aggregated_data" --output_name "tickets_weather_agg" --data_format "parquet"
+```
+
+
 ## Task 4 (Streaming)
 
 1. Set up kafka with docker (we use the same configuration as we used in the assignment)
