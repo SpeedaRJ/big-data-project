@@ -139,5 +139,5 @@ srun python data_scripts/data_augmentations/add_weather_data.py --tickets_locati
 
 4. Run the producer - stream each line from specified raw files (We assume the data is chronologically ordered).
     ```bash
-    python ./tasks/04/raw_data_producer.py --data-dir "./data/raw" --years <year1> <year2> <year3> ... --n-lines <number of lines to stream | -1 for whole file>
+    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/full_data_cleaned.parquet" --weather_file "./data/additional_data/weather/weather_NYC_2013_2024_processed.csv" --fiscal_year 2014 --limit -1
     ```
