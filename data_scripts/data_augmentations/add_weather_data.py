@@ -3,6 +3,7 @@ import argparse
 
 import pandas as pd
 import dask.dataframe as dd
+from dask.diagnostics import ProgressBar
 
 
 def parse_args():
@@ -32,7 +33,8 @@ def main():
         raise ValueError('Invalid data format')
     
     print("Merging datasets")
-    merged = tickets.merge(weather, how="left", left_on="Issue Date", right_on="datetime")
+    with ProgressBar():
+        merged = tickets.merge(weather, how="left", left_on="Issue Date", right_on="datetime")
     
     print("Saving output")
     if args.data_format == 'parquet':
