@@ -24,7 +24,7 @@ def main():
     weather["datetime"] = pd.to_datetime(weather["datetime"]).dt.floor("D")
     
     if args.data_format == 'parquet':
-        tickets = dd.read_parquet(args.ticket_location)
+        tickets = dd.read_parquet(args.tickets_location)
         tickets["Issue Date"] = dd.to_datetime(tickets["Issue Date"], unit="ms").dt.floor("D")
     elif args.data_format == 'hdf5':
         # TODO: add hdf5 support
