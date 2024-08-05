@@ -37,6 +37,7 @@ def main():
         merged = tickets.merge(weather, how="left", left_on="Issue Date", right_on="datetime")
     
     print("Saving output")
+    os.makedirs(args.output_location, exist_ok=True)
     if args.data_format == 'parquet':
         merged.to_parquet(os.path.join(args.output_location, f"{args.output_name}.parquet"))
     elif args.data_format == 'hdf5':
