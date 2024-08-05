@@ -62,7 +62,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Produce data to Kafka")
     parser.add_argument("--data-dir", default="./data/raw", help="Directory with data files relative to root of the project")
     parser.add_argument("--years", nargs="+", help="Years to produce") # we assume that each year has an associated <year>.csv file
-    parser.add_argument("--n-lines", type=int, default=100, help="Number of lines to produce") # so we can limit the number of lines produced when testing (if -1 then all lines are produced)
     return parser.parse_args()
 
 
