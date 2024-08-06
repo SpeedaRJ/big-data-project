@@ -22,18 +22,16 @@ COLUMNS = [
     'Sub Division', 'Violation Legal Code', 'Days Parking In Effect',
     'From Hours In Effect', 'To Hours In Effect', 'Vehicle Color',
     'Vehicle Year', 'Feet From Curb', 'Violation Post Code',
-    'Violation Description', 'Latitude', 'Longitude', 'datetime', 'tempmax',
-    'tempmin', 'temp', 'conditions', 'humidity', 'windspeed', 'visibility'
+    'Violation Description', 'Latitude', 'Longitude'
 ]
 # TODO: decide which columns to keep to send for processing
-# KEEP_COLUMNS = []
-KEEP_COLUMNS = COLUMNS.copy()
+KEEP_COLUMNS = [ 'Summons Number', 'Plate ID', 'Issue Date', 'Vehicle Make', 'Violation County', 'Street Name', 'Vehicle Year', 'Latitude', 'Longitude']
+# KEEP_COLUMNS = COLUMNS.copy()
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Produce data to Kafka")
     parser.add_argument("--tickets_file", type=str, help="Path to the tickets file")
-    parser.add_argument("--weather_file", type=str, help="Path to the weather file")
     parser.add_argument("--fiscal_years", nargs="+", help="Years to produce")
     parser.add_argument("--limit", type=int, default=100, help="Limit the number of rows to produce")
     return parser.parse_args()
@@ -54,15 +52,11 @@ def producer(fiscal_year_ddf, limit):
             if n_produced >= limit and limit != -1:
                 break
             value = content[KEEP_COLUMNS].to_dict()
-            # convert datetime to string for serialization
-            if "datetime" in value:
-                value["datetime"] = value["datetime"].strftime("%Y-%m-%d")
             if "Issue Date" in value:
                 value["Issue Date"] = value["Issue Date"].strftime("%Y-%m-%d")
             # uppercase and replace spaces with underscores so it's easier to work with in the stream processing
             value = {k.upper().replace(" ", "_"): v for k, v in value.items()}
             # send the message
-            print(value)
             producer.send(topic=TOPIC, value=value)
             n_produced += 1
         npart += 1
@@ -71,22 +65,15 @@ def producer(fiscal_year_ddf, limit):
 
 def main():
     args = parse_args()
-    # weather data is fairly small so read it with pandas
-    weather = pd.read_csv(args.weather_file, delimiter=";")
-    weather["datetime"] = pd.to_datetime(weather["datetime"]).dt.floor("D")
     
-    # tickets are a lot bigger so read them with dask so it doesn't load in memory
     tickets = dd.read_parquet(args.tickets_file)
     tickets["Issue Date"] = dd.to_datetime(tickets["Issue Date"], unit="ms").dt.floor("D")
-    
-    # lazy merge
-    merged = tickets.merge(weather, how="left", left_on="Issue Date", right_on="datetime")
     
     for year in args.fiscal_years:
         # start and end date of the fiscal year
         start_date, end_date = f"{int(year)-1}-07-01", f"{year}-06-30"
         
-        fiscal_year_ddf = merged[(merged["Issue Date"] >= start_date) & (merged["Issue Date"] <= end_date)]
+        fiscal_year_ddf = tickets[(tickets["Issue Date"] >= start_date) & (tickets["Issue Date"] <= end_date)]
         producer(fiscal_year_ddf, args.limit)
 
 
