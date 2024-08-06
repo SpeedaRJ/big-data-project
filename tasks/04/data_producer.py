@@ -56,18 +56,13 @@ def producer(fiscal_year_ddf, limit):
             value = content[KEEP_COLUMNS].to_dict()
             # convert datetime to string for serialization
             if "datetime" in value:
-                try:
-                    value["datetime"] = value["datetime"].strftime("%Y-%m-%d")
-                except Exception as e:
-                    print(e)
-                    value["datetime"] = ""
+                value["datetime"] = value["datetime"].strftime("%Y-%m-%d")
             if "Issue Date" in value:
-                try:
-                    value["Issue Date"] = value["Issue Date"].strftime("%Y-%m-%d")
-                except Exception as e:
-                    print(e)
-                    value["Issue Date"] = ""
+                value["Issue Date"] = value["Issue Date"].strftime("%Y-%m-%d")
+            # uppercase and replace spaces with underscores so it's easier to work with in the stream processing
+            value = {k.upper().replace(" ", "_"): v for k, v in value.items()}
             # send the message
+            print(value)
             producer.send(topic=TOPIC, value=value)
             n_produced += 1
         npart += 1
@@ -77,7 +72,7 @@ def producer(fiscal_year_ddf, limit):
 def main():
     args = parse_args()
     # weather data is fairly small so read it with pandas
-    weather = pd.read_csv(args.weather_file)
+    weather = pd.read_csv(args.weather_file, delimiter=";")
     weather["datetime"] = pd.to_datetime(weather["datetime"]).dt.floor("D")
     
     # tickets are a lot bigger so read them with dask so it doesn't load in memory
