@@ -1,112 +1,131 @@
+import pandas as pd
 import faust
 
 BROKER = 'kafka://localhost:29092'
-
+TOPIC = "raw-data"
 
 class RawData(faust.Record, serializer='json'):
-    summons_number: str
-    plate_id: str
-    registration_state: str
-    plate_type: str
-    issue_date: str
-    violation_code: str
-    vehicle_body_type: str
-    vehicle_make: str
-    issuing_agency: str
-    street_code1: str
-    street_code2: str
-    street_code3: str
-    vehicle_expiration_date: str
-    violation_location: str
-    violation_precinct: str
-    issuer_precinct: str
-    issuer_code: str
-    issuer_command: str
-    issuer_squad: str
-    violation_time: str
-    time_first_observed: str
-    violation_county: str
-    violation_in_front_of_or_opposite: str
-    house_number: str
-    street_name: str
-    intersecting_street: str
-    date_first_observed: str
-    law_section: str
-    sub_division: str
-    violation_legal_code: str
-    days_parking_in_effect: str
-    from_hours_in_effect: str
-    to_hours_in_effect: str
-    vehicle_color: str
-    unregistered_vehicle: str
-    vehicle_year: str
-    meter_number: str
-    feet_from_curb: str
-    violation_post_code: str
-    violation_description: str
-    no_standing_or_stopping_violation: str
-    hydrant_violation: str
-    double_parking_violation: str
+    SUMMONS_NUMBER: str
+    PLATE_ID: str
+    # REGISTRATION_STATE: str
+    # PLATE_TYPE: str
+    ISSUE_DATE: str
+    # VIOLATION_CODE: str
+    # VEHICLE_BODY_TYPE: str
+    VEHICLE_MAKE: str
+    # ISSUING_AGENCY: str
+    # STREET_CODE1: str
+    # STREET_CODE2: str
+    # STREET_CODE3: str
+    # VEHICLE_EXPIRATION_DATE: str
+    # VIOLATION_LOCATION: str
+    # VIOLATION_PRECINCT: str
+    # ISSUER_PRECINCT: str
+    # ISSUER_CODE: str
+    # ISSUER_COMMAND: str
+    # ISSUER_SQUAD: str
+    # VIOLATION_TIME: str
+    VIOLATION_COUNTY: str
+    # VIOLATION_IN_FRONT_OF_OR_OPPOSITE: str
+    # HOUSE_NUMBER: str
+    STREET_NAME: str
+    # INTERSECTING_STREET: str
+    # DATE_FIRST_OBSERVED: str
+    # LAW_SECTION: str
+    # SUB_DIVISION: str
+    # VIOLATION_LEGAL_CODE: str
+    # DAYS_PARKING_IN_EFFECT: str
+    # FROM_HOURS_IN_EFFECT: str
+    # TO_HOURS_IN_EFFECT: str
+    # VEHICLE_COLOR: str
+    VEHICLE_YEAR: str
+    # FEET_FROM_CURB: str
+    # VIOLATION_POST_CODE: str
+    # VIOLATION_DESCRIPTION: str
+    LATITUDE: str
+    LONGITUDE: str
 
 
 # define the application and the topic to consume from
 app = faust.App('faust-stream', broker=BROKER)
-topic = app.topic('raw-data', value_type=RawData)
+topic = app.topic(TOPIC, value_type=RawData)
 
 
-# test if we can consume the data
-test_topic = app.topic('test', value_serializer='json', internal=True, partitions=1)
+# # test if we can consume the data
+# test_topic = app.topic('test', value_serializer='json', internal=True, partitions=1)
+# @app.agent(topic)
+# async def process_test(stream):
+#     async for raw_data in stream:
+#         print(raw_data)
+
+
+# topics that will send the rolling statistics for all of the data, boroughs and for most interesting streets
+rolling_stats_all_topic = app.topic('rolling_stats_all', value_serializer='json', internal=True, partitions=1)
+rolling_stats_boroughs_topic = app.topic('rolling_stats_boroughs', value_serializer='json', internal=True, partitions=1)
+rolling_stats_streets_topic = app.topic('rolling_stats_streets', value_serializer='json', internal=True, partitions=1)
+# columns we are interested in
+COLUMNS = ["VEHICLE_MAKE", "VEHICLE_YEAR"]
+# we set a fixed window size to simulate data coming in real time and having an application that process it at fixed intervals
+WINDOW_SIZE = 100
+
 @app.agent(topic)
-async def process_test(stream):
-    async for raw_data in stream:
-        # print(raw_data)
-        pass
-
-
-# non overlapping windows
-freq_no_overlap_topic = app.topic('registration-state-freq-no-overlap', value_serializer='json', internal=True, partitions=1)
-freq_window_size_no_overlap = 100
-
-@app.agent(topic)
-async def process_registration_state_freq(stream):
-    async for values in stream.take(freq_window_size_no_overlap, within=10):
-        registration_state_freq = {}
+async def rolling_stats(stream):
+    async for values in stream.take(WINDOW_SIZE, within=10): # within specifies the time window to wait for more data
+        df = pd.DataFrame(columns=["VEHICLE_MAKE", "VEHICLE_YEAR", "BOROUGH", "STREET_NAME"])
         for value in values:
-            registration_state = value.registration_state
-            if registration_state in registration_state_freq:
-                registration_state_freq[registration_state] += 1
-            else:
-                registration_state_freq[registration_state] = 1
-        # print(registration_state_freq)
-        await freq_no_overlap_topic.send(value={f"registration_state_freq_no_overlap_{freq_window_size_no_overlap}": registration_state_freq})
-
-
-# overlapping windows
-freq_overlap_topic = app.topic('registration-state-freq-overlap', value_serializer='json', internal=True, partitions=1)
-freq_window_size_overlap = 100
-
-@app.agent(topic)
-async def process_registration_state_freq_overlapping(stream):
-    registration_states = []
-    async for value in stream:
-        # once the window is full calculate the frequency of each registration state and pop the first (oldest) element
-        if len(registration_states) == freq_window_size_overlap:
-            registration_state_freq = {}
-            for registration_state in registration_states:
-                if registration_state in registration_state_freq:
-                    registration_state_freq[registration_state] += 1
-                else:
-                    registration_state_freq[registration_state] = 1
+            df.loc[len(df)] = [value.VEHICLE_MAKE, value.VEHICLE_YEAR, value.VIOLATION_COUNTY, value.STREET_NAME]
+        df["VEHICLE_YEAR"] = pd.to_numeric(df["VEHICLE_YEAR"], errors='coerce')
+        current_year = value.ISSUE_DATE.split("-")[0] # sent values from producer value["Issue Date"].strftime("%Y-%m-%d")
+        
+        # rolling statistics for all data
+        vehicle_make = df["VEHICLE_MAKE"].value_counts().to_dict()
+        temp = df[(df["VEHICLE_YEAR"] > 0) & (df["VEHICLE_YEAR"] < int(current_year))]
+        await rolling_stats_all_topic.send(value={
+            "vehicle_make": vehicle_make, 
+            "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
+            "vehicle_year_std": str(temp["VEHICLE_YEAR"].std()),
+            "vehicle_year_min": str(temp["VEHICLE_YEAR"].min()),
+            "vehicle_year_max": str(temp["VEHICLE_YEAR"].max()),
+            "vehicle_year_per_25": str(temp["VEHICLE_YEAR"].quantile(0.25)),
+            "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
+            "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
+        })
+        
+        # rolling statistics for boroughs
+        boroughs = df.groupby("BOROUGH")
+        for group_name, group_df in boroughs:
+            vehicle_make_boroughs = group_df["VEHICLE_MAKE"].value_counts().to_dict()
+            temp = group_df[(group_df["VEHICLE_YEAR"] > 0) & (group_df["VEHICLE_YEAR"] < int(current_year))]
+            await rolling_stats_boroughs_topic.send(value={
+                "borough": group_name,
+                "vehicle_make": vehicle_make_boroughs, 
+                "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
+                "vehicle_year_std": str(temp["VEHICLE_YEAR"].std()),
+                "vehicle_year_min": str(temp["VEHICLE_YEAR"].min()),
+                "vehicle_year_max": str(temp["VEHICLE_YEAR"].max()),
+                "vehicle_year_per_25": str(temp["VEHICLE_YEAR"].quantile(0.25)),
+                "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
+                "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
+            })
             
-            # print(registration_state_freq)
-            await freq_overlap_topic.send(value={f"registration_state_freq_overlap_{freq_window_size_overlap}": registration_state_freq})
-            
-            # remove the oldest element
-            registration_states.pop(0)
-            
-        # add the new element to the window
-        registration_states.append(value.registration_state)
-
+        
+        # TODO: add a filter for only specific streets
+        # rolling statistics for streets
+        streets = df.groupby("STREET_NAME")
+        for group_name, group_df in streets:
+            vehicle_make_streets = group_df["VEHICLE_MAKE"].value_counts().to_dict()
+            temp = group_df[(group_df["VEHICLE_YEAR"] > 0) & (group_df["VEHICLE_YEAR"] < int(current_year))]
+            await rolling_stats_streets_topic.send(value={
+                "street_name": group_name,
+                "vehicle_make": vehicle_make_streets, 
+                "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
+                "vehicle_year_std": str(temp["VEHICLE_YEAR"].std()),
+                "vehicle_year_min": str(temp["VEHICLE_YEAR"].min()),
+                "vehicle_year_max": str(temp["VEHICLE_YEAR"].max()),
+                "vehicle_year_per_25": str(temp["VEHICLE_YEAR"].quantile(0.25)),
+                "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
+                "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
+            })
 
 
 if __name__ == '__main__':
