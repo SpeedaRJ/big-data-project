@@ -76,43 +76,56 @@ async def rolling_stats(stream):
             df.loc[len(df)] = [value.VEHICLE_MAKE, value.VEHICLE_YEAR, value.VIOLATION_COUNTY, value.STREET_NAME]
         df["VEHICLE_YEAR"] = pd.to_numeric(df["VEHICLE_YEAR"], errors='coerce')
         current_year = value.ISSUE_DATE.split("-")[0] # sent values from producer value["Issue Date"].strftime("%Y-%m-%d")
-        valid_years_mask = (df["VEHICLE_YEAR"] > 0) & (df["VEHICLE_YEAR"] < int(current_year))
         
         # rolling statistics for all data
         vehicle_make = df["VEHICLE_MAKE"].value_counts().to_dict()
-        temp = df[valid_years_mask]
-        vehicle_year_mean = temp["VEHICLE_YEAR"].mean()
-        vehicle_year_std = temp["VEHICLE_YEAR"].std()
-        vehicle_year_min = temp["VEHICLE_YEAR"].min()
-        vehicle_year_max = temp["VEHICLE_YEAR"].max()
-        vehicle_year_per_25 = temp["VEHICLE_YEAR"].quantile(0.25)
-        vehicle_year_per_50 = temp["VEHICLE_YEAR"].quantile(0.50)
-        vehicle_year_per_75 = temp["VEHICLE_YEAR"].quantile(0.75)
-        print(vehicle_make, vehicle_year_mean, vehicle_year_std, vehicle_year_min, vehicle_year_max, vehicle_year_per_25, vehicle_year_per_50, vehicle_year_per_75)
+        temp = df[(df["VEHICLE_YEAR"] > 0) & (df["VEHICLE_YEAR"] < int(current_year))]
+        await rolling_stats_all_topic.send(value={
+            "vehicle_make": vehicle_make, 
+            "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
+            "vehicle_year_std": str(temp["VEHICLE_YEAR"].std()),
+            "vehicle_year_min": str(temp["VEHICLE_YEAR"].min()),
+            "vehicle_year_max": str(temp["VEHICLE_YEAR"].max()),
+            "vehicle_year_per_25": str(temp["VEHICLE_YEAR"].quantile(0.25)),
+            "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
+            "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
+        })
         
         # rolling statistics for boroughs
-        # boroughs = df.groupby("BOROUGH")
-        # vehicle_make_boroughs = boroughs["VEHICLE_MAKE"].value_counts().to_dict()
-        # vehicle_year_mean_boroughs = boroughs["VEHICLE_YEAR"].mean().to_dict()  
-        # vehicle_year_std_boroughs = boroughs["VEHICLE_YEAR"].std().to_dict()
-        # vehicle_year_min_boroughs = boroughs["VEHICLE_YEAR"].min().to_dict()
-        # vehicle_year_max_boroughs = boroughs["VEHICLE_YEAR"].max().to_dict()
-        # vehicle_year_per_25_boroughs = boroughs["VEHICLE_YEAR"].quantile(0.25).to_dict()
-        # vehicle_year_per_50_boroughs = boroughs["VEHICLE_YEAR"].quantile(0.50).to_dict()
-        # vehicle_year_per_75_boroughs = boroughs["VEHICLE_YEAR"].quantile(0.75).to_dict()
-        # print(vehicle_make_boroughs, vehicle_year_mean_boroughs, vehicle_year_std_boroughs, vehicle_year_min_boroughs, vehicle_year_max_boroughs, vehicle_year_per_25_boroughs, vehicle_year_per_50_boroughs, vehicle_year_per_75_boroughs)
+        boroughs = df.groupby("BOROUGH")
+        for group_name, group_df in boroughs:
+            vehicle_make_boroughs = group_df["VEHICLE_MAKE"].value_counts().to_dict()
+            temp = group_df[(group_df["VEHICLE_YEAR"] > 0) & (group_df["VEHICLE_YEAR"] < int(current_year))]
+            await rolling_stats_boroughs_topic.send(value={
+                "borough": group_name,
+                "vehicle_make": vehicle_make_boroughs, 
+                "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
+                "vehicle_year_std": str(temp["VEHICLE_YEAR"].std()),
+                "vehicle_year_min": str(temp["VEHICLE_YEAR"].min()),
+                "vehicle_year_max": str(temp["VEHICLE_YEAR"].max()),
+                "vehicle_year_per_25": str(temp["VEHICLE_YEAR"].quantile(0.25)),
+                "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
+                "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
+            })
+            
         
-        # # rolling statistics for streets
-        # streets = df.groupby("STREET_NAME")
-        # vehicle_make_streets = streets["VEHICLE_MAKE"].value_counts().to_dict()
-        # vehicle_year_mean_streets = streets["VEHICLE_YEAR"].mean().to_dict()
-        # vehicle_year_std_streets = streets["VEHICLE_YEAR"].std().to_dict()
-        # vehicle_year_min_streets = streets["VEHICLE_YEAR"].min().to_dict()
-        # vehicle_year_max_streets = streets["VEHICLE_YEAR"].max().to_dict()
-        # vehicle_year_per_25_streets = streets["VEHICLE_YEAR"].quantile(0.25).to_dict()
-        # vehicle_year_per_50_streets = streets["VEHICLE_YEAR"].quantile(0.50).to_dict()
-        # vehicle_year_per_75_streets = streets["VEHICLE_YEAR"].quantile(0.75).to_dict()
-        # print(vehicle_make_streets, vehicle_year_mean_streets, vehicle_year_std_streets, vehicle_year_min_streets, vehicle_year_max_streets, vehicle_year_per_25_streets, vehicle_year_per_50_streets, vehicle_year_per_75_streets)
+        # TODO: add a filter for only specific streets
+        # rolling statistics for streets
+        streets = df.groupby("STREET_NAME")
+        for group_name, group_df in streets:
+            vehicle_make_streets = group_df["VEHICLE_MAKE"].value_counts().to_dict()
+            temp = group_df[(group_df["VEHICLE_YEAR"] > 0) & (group_df["VEHICLE_YEAR"] < int(current_year))]
+            await rolling_stats_streets_topic.send(value={
+                "street_name": group_name,
+                "vehicle_make": vehicle_make_streets, 
+                "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
+                "vehicle_year_std": str(temp["VEHICLE_YEAR"].std()),
+                "vehicle_year_min": str(temp["VEHICLE_YEAR"].min()),
+                "vehicle_year_max": str(temp["VEHICLE_YEAR"].max()),
+                "vehicle_year_per_25": str(temp["VEHICLE_YEAR"].quantile(0.25)),
+                "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
+                "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
+            })
 
 
 if __name__ == '__main__':
