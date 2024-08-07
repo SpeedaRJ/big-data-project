@@ -1,3 +1,4 @@
+# NOTE: This code isn't functional
 import argparse
 import os
 import warnings
@@ -8,7 +9,6 @@ from rtree import index
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 import platform
-from contextlib import suppress
 
 import dask_jobqueue
 from distributed import Client, progress
