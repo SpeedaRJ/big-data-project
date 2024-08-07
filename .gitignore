@@ -2,6 +2,7 @@
 .vscode/
 data/parking_tickets/
 *.pickle
+*.out
 
 data/additional_data/events/
 data/additional_data/businesses/

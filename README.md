@@ -1,10 +1,16 @@
 # big-data-project
 Repository aimed at holding the code, report, and results of the Big Data course project.
 
-# Environment Setup
+# Good to Know Information
 
+Environment setup:  
 ```bash
 conda env create -f env.yaml
+```
+
+Data location on HPC:
+```bash
+/d/hpc/projects/FRI/bigdata/students/lsrj/data
 ```
 
 # Repository Overview

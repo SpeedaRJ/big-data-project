@@ -10,7 +10,7 @@ fi
 echo "Printing file sizes"
 
 if [[ $# -eq 3 ]]; then
-    
+
     echo "Raw CSV files:"
     ls -sh "$1"
 
@@ -20,7 +20,7 @@ if [[ $# -eq 3 ]]; then
     echo "HDF5 files:"
     ls -sh "$3"
 
-else 
+else
     echo "Raw CSV files:"
     ls -sh "$1/raw"
 
@@ -30,4 +30,3 @@ else
     echo "HDF5 files:"
     ls -sh "$1/hdf5"
 fi
-
