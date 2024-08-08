@@ -28,8 +28,8 @@ def process_type(type):
         >>> process_type(np.dtype("O"))
         'S1'
     """
-    if type == np.int64:
-        return "int"
+    if type == np.int64 or type == np.int32:
+        return "<i8"
     if type == np.dtype("O"):
         return "S1"
     if type == np.float64:

@@ -24,8 +24,7 @@ COLUMNS = [
     'Vehicle Year', 'Feet From Curb', 'Violation Post Code',
     'Violation Description', 'Latitude', 'Longitude'
 ]
-# TODO: decide which columns to keep to send for processing
-KEEP_COLUMNS = [ 'Summons Number', 'Plate ID', 'Issue Date', 'Vehicle Make', 'Violation County', 'Street Name', 'Vehicle Year', 'Latitude', 'Longitude']
+KEEP_COLUMNS = [ 'Summons Number', 'Plate ID', 'Street Code1', 'Issue Date', 'Vehicle Make', 'Violation County', 'Street Name', 'Vehicle Year', 'Latitude', 'Longitude']
 # KEEP_COLUMNS = COLUMNS.copy()
 
 

@@ -107,7 +107,7 @@ In order to allow for better processing and data enrichment down the line, we th
 
 | **File Name**  | **CSV Size [GB]** | **Parquet Size [GB]** | **HDF5 Size [GB]** |
 | -------------- | ----------------- | --------------------- | ------------------ |
-| *full_dataset* | 16.33             | 3.32                  | 2.44               |
+| *full_dataset* | 16.33             | 3.32                  | 2.62               |
 
 To pre-process the CSV files, run the following command, where the paths refer to where the original raw `csv` files are located, and where you want to store the full dataset in parquet and hdf5 formats:
 ```sh
