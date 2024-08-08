@@ -28,8 +28,8 @@ def process_type(type):
         >>> process_type(np.dtype("O"))
         'S1'
     """
-    if type == np.int64:
-        return "int"
+    if type == np.int64 or type == np.int32:
+        return "<i8"
     if type == np.dtype("O"):
         return "S1"
     if type == np.float64:
@@ -104,9 +104,15 @@ def read_hdf5(path):
     Note:
         The schema is retrieved using the `get_schema` method of the `DataSchema` class.
     """
+    try:
+        year = int(Path(path).stem)
+    except:
+        year = 2000
     columns = list(
-        DataSchema(int(Path(path).stem))
-        .get_schema(f"{os.path.splitext(path)[0].replace('hdf5', 'raw')}.csv")
+        DataSchema(year)
+        .get_schema(
+            f"{os.path.splitext(path)[0].replace('hdf5', 'raw').replace('unprocessed', '').replace('filtered', '')}.csv"
+        )
         .keys()
     )
     columns.insert(5, "Issue Date")
