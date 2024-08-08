@@ -22,17 +22,21 @@ Directory tree view of the repository
 ├── data
 │   ├── additional_data
 │   │   ├── businesses
-│   │   ├── events
 │   │   ├── landmarks
 │   │   ├── schools
 │   │   └── weather
 │   ├── meta_data
 │   └── parking_tickets
 │       ├── hdf5
+│       │   ├── filtered
+│       │   └── unprocessed
 │       ├── parquet
+│       │   ├── filtered
+│       │   └── unprocessed
 │       └── raw
 ├── data_scripts
-│   └── data_augmentations
+│   ├── data_augmentations
+│   └── tmp
 ├── notebooks
 ├── results
 │   └── ...

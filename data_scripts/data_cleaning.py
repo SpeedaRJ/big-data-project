@@ -12,7 +12,7 @@ filter_row = lambda beginning, ending: lambda row: (
 ) and (pd.Timestamp(row["Issue Date"], unit="ms") < ending)
 
 
-def filter_rows_by_date(dataframe, year):
+def filter_rows_by_date(dataframe, year, dask=False):
     """
     Filters rows in the given DataFrame based on the specified fiscal year.
 
@@ -24,6 +24,8 @@ def filter_rows_by_date(dataframe, year):
         pd.DataFrame: A DataFrame with rows filtered by the specified fiscal year.
     """
     fiscal_row_filter = filter_row(*fiscal_year(year))
+    if dask:
+        return dataframe.apply(fiscal_row_filter, axis=1, meta=(None, "bool"))
     return dataframe.apply(fiscal_row_filter, axis=1)
 
 

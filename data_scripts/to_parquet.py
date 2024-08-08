@@ -33,19 +33,19 @@ def csv_to_parquet(location, dropoff):
         save_to_parquet(data_processed, dropoff, year)
 
 
-def save_to_parquet(data, dropoff, year):
+def save_to_parquet(data, dropoff, filename):
     """
     Save the given data to a Parquet file.
 
     Parameters:
     data (DataFrame): The data to be saved.
     dropoff (str): The directory where the Parquet file will be saved.
-    year (int): The year to be used in the filename.
+    filename (int): The filename to be used.
 
     Returns:
     None
     """
-    data.to_parquet(os.path.join(dropoff, f"{year}.parquet"))
+    data.to_parquet(os.path.join(dropoff, f"{filename}.parquet"))
 
 
 def read_parquet(path):

@@ -49,7 +49,7 @@ def read_csvs(location):
     return yearly_data_dict
 
 
-def unify_borough_names(data):
+def unify_borough_names(data, dask=False):
     """
     Unifies the borough names in the 'Violation County' column of the given DataFrame.
 
@@ -67,7 +67,7 @@ def unify_borough_names(data):
     Returns:
         pd.DataFrame: The DataFrame with unified borough names in the 'Violation County' column.
     """
-    data.dropna(subset=["Violation County"], inplace=True)
+    data = data.dropna(subset=["Violation County"])
     # Ensure at least one street code is present
     data = data[
         (data["Street Code1"] != 0)
@@ -92,14 +92,18 @@ def unify_borough_names(data):
         "Unknown",
     )
 
-    data["Violation County"] = data.apply(get_borough, axis=1)
+    data["Violation County"] = (
+        data.apply(get_borough, axis=1)
+        if not dask
+        else data.apply(get_borough, axis=1, meta=(None, "object"))
+    )
 
     # Remove a few rows with unknown boroughs, we saw a few examples of unidentifiable borough names
-    full_data = full_data[full_data["Violation County"] != "Unknown"]
+    data = data[data["Violation County"] != "Unknown"]
     return data
 
 
-def _get_location_via_street_codes(row, borough_codes, street_codes):
+def _get_location_via_street_codes(map, row, borough_codes, street_codes):
     """
     Determines the latitude and longitude of a location based on street codes and borough codes.
 
@@ -188,7 +192,9 @@ def compute_violation_coords(data):
         desc="Calculating violation coordinates", total=len(working_data)
     ) as progress_bar:
         jl.Parallel(n_jobs=32, require="sharedmem", prefer="threads")(
-            jl.delayed(_get_location_via_street_codes)(row, borough_codes, street_codes)
+            jl.delayed(_get_location_via_street_codes)(
+                map, row, borough_codes, street_codes
+            )
             for row in working_data.to_numpy()
         )
 

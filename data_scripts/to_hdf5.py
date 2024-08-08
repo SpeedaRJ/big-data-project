@@ -63,14 +63,14 @@ def csv_to_hdf5(location, dropoff):
         save_to_hdf5(data_processed, dropoff, year)
 
 
-def save_to_hdf5(data_processed, dropoff, year):
+def save_to_hdf5(data_processed, dropoff, filename):
     """
     Save the processed data to an HDF5 file.
 
     Parameters:
     data_processed (DataFrame): The processed data to be saved.
     dropoff (str): The directory where the HDF5 file will be saved.
-    year (int): The year to be used in the filename.
+    filename (str): The filename to be used.
 
     Returns:
     None
@@ -81,7 +81,7 @@ def save_to_hdf5(data_processed, dropoff, year):
     array = np.empty(len(data_processed), dtype=data_types)
     for column in data_processed.columns:
         array[column] = data_processed[column]
-    with h5py.File(os.path.join(dropoff, f"{year}.h5"), "w") as h5df:
+    with h5py.File(os.path.join(dropoff, f"{filename}.h5"), "w") as h5df:
         h5df.create_dataset("data", data=array, compression="gzip", compression_opts=9)
 
 
