@@ -1,5 +1,8 @@
+import numpy as np
 import pandas as pd
 import faust
+
+from sklearn.cluster import MiniBatchKMeans, Birch, DBSCAN
 
 BROKER = 'kafka://localhost:29092'
 TOPIC = "raw-data"
@@ -126,6 +129,31 @@ async def rolling_stats(stream):
                 "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
                 "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
             })
+
+
+
+##### spatial stream clustering
+
+kmeans_topic = app.topic('kmeans', value_serializer='json', internal=True, partitions=1)
+birch_topic = app.topic('birch', value_serializer='json', internal=True, partitions=1)
+WINDOW_SIZE = 1024
+N_CLUSTERS = 8
+
+@app.agent(topic)
+async def rolling_stats(stream):
+    kmeans = MiniBatchKMeans(n_clusters=N_CLUSTERS, batch_size=WINDOW_SIZE, random_state=42)
+    # birch = Birch(n_clusters=N_CLUSTERS)
+    async for values in stream.take(WINDOW_SIZE, within=10): # within specifies the time window to wait for more data
+        X = np.array([[value.LATITUDE, value.LONGITUDE] for value in values])
+        
+        kmeans.partial_fit(X)
+        
+        centroids = kmeans.cluster_centers_
+        labels = kmeans.labels_
+        await kmeans_topic.send(value={
+            "centroids": centroids.tolist(),
+            "labels": labels.tolist()
+        })
 
 
 if __name__ == '__main__':

@@ -139,7 +139,7 @@ srun python data_scripts/data_augmentations/add_weather_data.py --tickets_locati
     ```
 
     ```bash
-    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets --save True
+    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets kmeans birch --save True
     ```
 
 3. Run the stream processing program(s) that will consume raw data and produce rolling descriptive statistics.
