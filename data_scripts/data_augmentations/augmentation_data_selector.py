@@ -9,11 +9,32 @@ MAIN_PATH = ".\\data\\additional_data"
 
 
 def load_additional_data(data, filename, sep=","):
+    """
+    Load additional data from a CSV file.
+
+    Parameters:
+    data (str): The directory or path where the data is located.
+    filename (str): The name of the CSV file to load.
+    sep (str, optional): The delimiter to use for separating values. Defaults to ",".
+
+    Returns:
+    DataFrame: The loaded data as a pandas DataFrame.
+    """
     data = pd.read_csv(os.path.join(MAIN_PATH, data, filename), sep=sep)
     return data
 
 
 def _parse_geom(geom_string, pattern):
+    """
+    Parse a geometry string and extract coordinates based on a regex pattern.
+
+    Parameters:
+    geom_string (str): The geometry string to be parsed.
+    pattern (str): The regex pattern to find the coordinates in the geometry string.
+
+    Returns:
+    numpy.ndarray: A numpy array containing the mean coordinates.
+    """
     geom_list = [
         geom.replace("(", "").replace(")", "")
         for geom in re.findall(pattern, str(geom_string))
@@ -26,6 +47,15 @@ def _parse_geom(geom_string, pattern):
 
 
 def get_center_location_from_polygon(data):
+    """
+    Calculate the center location (longitude and latitude) from polygon geometries in a DataFrame.
+
+    Parameters:
+    data (pandas.DataFrame): The DataFrame containing polygon geometries in the 'the_geom' column.
+
+    Returns:
+    pandas.DataFrame: The DataFrame with added 'long' and 'lat' columns representing the center locations.
+    """
     pattern = r"(?<=\(\().*?(?=\)\))"
     for idx, row in data.iterrows():
         if "EMPTY" in row["the_geom"]:
