@@ -49,7 +49,7 @@ def read_csvs(location):
     return yearly_data_dict
 
 
-def unify_borough_names(data, dask=False):
+def unify_borough_names(data):
     """
     Unifies the borough names in the 'Violation County' column of the given DataFrame.
 
@@ -92,11 +92,7 @@ def unify_borough_names(data, dask=False):
         "Unknown",
     )
 
-    data["Violation County"] = (
-        data.apply(get_borough, axis=1)
-        if not dask
-        else data.apply(get_borough, axis=1, meta=(None, "object"))
-    )
+    data["Violation County"] = data.apply(get_borough, axis=1)
 
     # Remove a few rows with unknown boroughs, we saw a few examples of unidentifiable borough names
     data = data[data["Violation County"] != "Unknown"]

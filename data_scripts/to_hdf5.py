@@ -104,8 +104,12 @@ def read_hdf5(path):
     Note:
         The schema is retrieved using the `get_schema` method of the `DataSchema` class.
     """
+    try:
+        year = int(Path(path).stem)
+    except:
+        year = 2000
     columns = list(
-        DataSchema(int(Path(path).stem))
+        DataSchema(year)
         .get_schema(f"{os.path.splitext(path)[0].replace('hdf5', 'raw')}.csv")
         .keys()
     )
