@@ -17,7 +17,7 @@ class RawData(faust.Record, serializer='json'):
     # VEHICLE_BODY_TYPE: str
     VEHICLE_MAKE: str
     # ISSUING_AGENCY: str
-    # STREET_CODE1: str
+    STREET_CODE1: str
     # STREET_CODE2: str
     # STREET_CODE3: str
     # VEHICLE_EXPIRATION_DATE: str
@@ -66,10 +66,9 @@ topic = app.topic(TOPIC, value_type=RawData)
 rolling_stats_all_topic = app.topic('rolling_stats_all', value_serializer='json', internal=True, partitions=1)
 rolling_stats_boroughs_topic = app.topic('rolling_stats_boroughs', value_serializer='json', internal=True, partitions=1)
 rolling_stats_streets_topic = app.topic('rolling_stats_streets', value_serializer='json', internal=True, partitions=1)
-# columns we are interested in
-COLUMNS = ["VEHICLE_MAKE", "VEHICLE_YEAR"]
 # we set a fixed window size to simulate data coming in real time and having an application that process it at fixed intervals
 WINDOW_SIZE = 100
+TOP_STREETS = [10010, 10110, 10210, 10410, 10510, 10810, 13610, 24890, 25390, 59990]
 
 @app.agent(topic)
 async def rolling_stats(stream):
@@ -112,14 +111,14 @@ async def rolling_stats(stream):
             })
             
         
-        # TODO: add a filter for only specific streets
         # rolling statistics for streets
-        streets = df.groupby("STREET_NAME")
+        streets = df[df["STREET_CODE1"].isin(TOP_STREETS)]
+        streets = streets.groupby("STREET_CODE1")
         for group_name, group_df in streets:
             vehicle_make_streets = group_df["VEHICLE_MAKE"].value_counts().to_dict()
             temp = group_df[(group_df["VEHICLE_YEAR"] > 0) & (group_df["VEHICLE_YEAR"] < int(current_year))]
             await rolling_stats_streets_topic.send(value={
-                "street_name": group_name,
+                "street_code1": group_name,
                 "vehicle_make": vehicle_make_streets, 
                 "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
                 "vehicle_year_std": str(temp["VEHICLE_YEAR"].std()),
@@ -133,7 +132,6 @@ async def rolling_stats(stream):
 
 
 ##### spatial stream clustering
-
 kmeans_topic = app.topic('kmeans', value_serializer='json', internal=True, partitions=1)
 birch_topic = app.topic('birch', value_serializer='json', internal=True, partitions=1)
 WINDOW_SIZE = 1024
