@@ -1,5 +1,9 @@
 #!/bin/bash
 
+module load Anaconda3
+
+source activate big_data
+
 if [[ $# -le 1 ]]; then
     echo "Call script as ... [base project dir] <parquet|hdf5>"
     exit
