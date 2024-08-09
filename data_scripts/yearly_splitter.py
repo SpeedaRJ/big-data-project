@@ -1,5 +1,6 @@
 import argparse
 
+import pandas as pd
 from data_cleaning import filter_rows_by_date
 from to_hdf5 import read_hdf5, save_to_hdf5
 from to_parquet import read_parquet, save_to_parquet
@@ -44,7 +45,9 @@ def run():
     else:
         raise ValueError("Invalid data format")
 
-    for year in tqdm(range(args.start_year, args.end_year + 1), desc="Splitting into years"):
+    for year in tqdm(
+        range(args.start_year, args.end_year + 1), desc="Splitting into years"
+    ):
         yearly_data = data_frame[filter_rows_by_date(data_frame, year)]
         if args.data_format == "parquet":
             save_to_parquet(yearly_data, args.output_location, f"{year}_filtered")

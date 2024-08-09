@@ -213,7 +213,7 @@ def main():
         res,
         columns=[
             args.output_name_column,
-            "Industry of Business",
+            "Industry of CB",
             args.output_distance_column,
         ],
         index=tickets_subset.index,
