@@ -45,29 +45,6 @@ def run():
     else:
         raise ValueError("Invalid data format")
 
-    print("Omitting invalid codes...")
-    fixed_codes = pd.read_csv("../data/meta_data/street_code_mapper_C.csv")
-    fixed_codes = pd.read_csv("../data/meta_data/street_code_mapper_C.csv")
-    fixed_codes = fixed_codes.set_index(fixed_codes["Unnamed: 0"])
-    fixed_codes.drop(columns=["Unnamed: 0"], inplace=True)
-
-    borough_codes = {
-        "Manhattan": 1,
-        "Bronx": 2,
-        "Brooklyn": 3,
-        "Queens": 4,
-        "Staten Island": 5,
-    }
-    mask = data_frame[["Street Code1", "Street Code2", "Street Code3", "Violation County"]].apply(
-        lambda x: any([
-            int(f"{borough_codes[x['Violation County']]}{x['Street Code1']}") in fixed_codes.index,
-            int(f"{borough_codes[x['Violation County']]}{x['Street Code2']}") in fixed_codes.index,
-            int(f"{borough_codes[x['Violation County']]}{x['Street Code3']}") in fixed_codes.index,
-        ]),
-        axis=1,
-    )
-    data_frame = data_frame[mask]
-
     for year in tqdm(
         range(args.start_year, args.end_year + 1), desc="Splitting into years"
     ):
