@@ -99,26 +99,12 @@ def read_hdf5(path):
     1. Opens the HDF5 file in read mode.
     2. Reads the dataset named "data" from the HDF5 file.
     3. Converts the dataset to a pandas DataFrame.
-    4. Sets the DataFrame columns using the schema for the year 2014.
-
-    Note:
-        The schema is retrieved using the `get_schema` method of the `DataSchema` class.
     """
-    try:
-        year = int(Path(path).stem)
-    except:
-        year = 2000
-    columns = list(
-        DataSchema(year)
-        .get_schema(f"{os.path.splitext(path)[0].replace('hdf5', 'raw')}.csv")
-        .keys()
-    )
-    columns.insert(5, "Issue Date")
     data = []
     with h5py.File(path, "r") as f:
         data = f["data"][()]
 
-    return pd.DataFrame(data, columns=columns)
+    return pd.DataFrame(data)
 
 
 if __name__ == "__main__":
