@@ -60,7 +60,7 @@ All of our data on the hpc is located in the `data` folder at:
 
 ## Parsing the Street Codes
 
-We obtained a dataset of the street code - name combinations from the [NYC Dataset website](https://data.cityofnewyork.us/City-Government/Street-Name-Dictionary/w4v2-rv6b/about_data ). The data came in the form of a text file, which we made a parser for (located in `big-data-project\meta_data`). This parser uses the Nominatim web API to obtain the necessary information about the streets (latitude and longitude) which we can later use for joining the secondary datasets. In the process of parsing the street codes, we are also creating a look-up table, which we can use to enrich the dataset, instead of relying on the API while streaming the dataset or otherwise processing it.
+We obtained a dataset of the street code - name combinations from the [NYC Dataset website](https://data.cityofnewyork.us/City-Government/Street-Name-Dictionary/w4v2-rv6b/about_data ). The data came in the form of a text file, which we made a parser for (located in `big-data-project\meta_data`). This parser uses the Nominatim web API to obtain the necessary information about the streets (latitude and longitude) which we can later use for joining the secondary datasets. In the process of parsing the street codes, we are also creating a look-up table, which we can use to enrich the dataset, instead of relying on the API while streaming the dataset or otherwise processing it. Lastly, we combed through the acquired lookup table, in order to remove any obtain coordinates that fall outside of New York City.
 
 Information on the meaning of the street codes was found on [Geosupport](https://nycplanning.github.io/Geosupport-UPG/chapters/chapterIV/chapterIV/).
 
@@ -68,7 +68,7 @@ Information on the meaning of the street codes was found on [Geosupport](https:/
 
 ## Task 1
 
-> NOTE: The below file conversions and base data preprocessing steps were done locally, and therefore we used `pandas` to simplify the process. Consequent tasks were done using `dask` and `duckdb` as required.
+> Note: The below file conversions and base data preprocessing steps were done locally, and therefore we used `pandas` to simplify the process. Consequent tasks were done using `dask` and `duckdb` as required.
 
 Below are displayed the file sizes after format conversion. Before any data has been cleaned, omitted, processed or removed. The only preprocessing step at this point was filling `None` values with either `-1` or `''` based on the column data type. The `Issue Date` column, was also converted to the `np.int64` data type in the form of a UNIX timestamp, instead of the default `datetime` type.
 
@@ -111,12 +111,38 @@ In order to allow for better processing and data enrichment down the line, we th
 
 To pre-process the CSV files, run the following command, where the paths refer to where the original raw `csv` files are located, and where you want to store the full dataset in parquet and hdf5 formats:
 ```sh
-python ./process_csvs.py <csv_path> <parquet_path>  <hdf5_path>
+python ./process_csvs.py <csv_path> <parquet_path> <hdf5_path>
 ```
+
+> We detected an anomaly in the 2022 dataset, where we were left with only 150 rows once filtering for the fiscal year. See `notebooks\2022_date_verification.ipynb`.
 
 ## Task 2
 
-> TODO
+We obtained our data for augmentations from various sources, most coming in different datasets from the [NYC OpenData](https://data.cityofnewyork.us/) website. We obtained the following additional datasets, for which we will describe the processing and merging steps below:
+- We obtained the daily weather in New York (Central Park) from the [VisualCrossing](https://www.visualcrossing.com) API, that allowed to obtain more descriptive information which we assume we can use later. This approach also gave us the ability to get data for each day we required  in a unified format.
+- We obtained a dataset of [Legally Operating Businesses](https://data.cityofnewyork.us/Business/Legally-Operating-Businesses/w7w3-xahh/about_data) from NYC OpenData.
+- From NYC OpenData, we also obtained the [2021 DOE High School Directory](https://data.cityofnewyork.us/Education/2021-DOE-High-School-Directory/8b6c-7uty/about_data) and [2021 DOE Middle School Directory](https://data.cityofnewyork.us/Education/2021-DOE-Middle-School-Directory/f6s7-vytj/about_data) dataset on school locations. These were the most up to date datasets we were able to find on their website.
+- Lastly, again from NYC OpenData, we also obtained the [Scenic Landmarks (Map)](https://data.cityofnewyork.us/Housing-Development/Scenic-Landmarks-Map-/gi7d-8gt5) and [Individual Landmark Sites (Map)](https://data.cityofnewyork.us/Housing-Development/Individual-Landmark-Sites-Map-/ts56-fkf5) datasets, which give us the spatial positioning of important New York landmarks.
+
+### Preprocessing and Merging Procedure
+All preprocessing steps for files can be found in `data_scripts\data_augmentations\augmentation_data_selector.py`. But to summarize, for each of the location based datasets (schools, landmarks and businesses) we kept the spatial information and some attributes of interest (typically only name). Businesses were slightly special in this, as we also had to consider when the business was operational, so we also kept that information. For weather, we kept the date column, as well as the columns we assumed most interesting in the context of EDA and ML for tasks 3 and 5. While the business and schools datasets gave us explicit latitude and longitude coordinates, the landmarks only contained the information of the polygon of any given landmark (list of coordinates that construct the outline of the landmark). Because we deemed this to complicated to merge later on, we implemented a procedure that extracted the central location of the landmark, based on it's polygon, and we stored that for later.
+
+Merging procedures can be found in the `data_scripts\data_augmentations` directory. However again to summarize, we have 3 merging procedures:
+- The weather data is simply merged by the data in timestamp format. We perform a left merge on the data columns of each of the datasets.
+- Merging of the other datasets, with the exception of businesses is performed in the following way: We read the secondary data frame, and using it we construct an [RTree index](https://rtree.readthedocs.io/en/latest/), which we later use for quick distance computations. We then parse the entire dataset, to retrieve the closest secondary entity (landmark, school or business) to the given violation based on the previously computed latitude and longitude. Based on the coordinates of the pair of entities we then compute the [Haversine](https://pypi.org/project/haversine/) distance between them. After computing the `(<closest entity name>, <distance to ce>)` pairs for each row of the main dataset, we construct an additional data frame, which then use to perform a left join on the indexes of the two data frames.
+- Merging the business information, largely follows the above procedure, with a few additional steps: Instead of retrieving the single closest entity to the location of the parking violation, we retrieve `n=1` entities, ordered by distance. We then filter these entities based on the `Issue Date` column to check if it falls between the businesses license creation and license expiration dates. We retrieve the entity in the first row of said result. If no result is given, we perform a recursive search with `n=n * 2`. We do this to limit the computational time, but still ensure we get a result for each entry. Here, instead of the above pair, we store `(<closest entity name>, <industry of ce>, <distance to ce>)`, since we tough this information might be interesting.
+
+### Merging Times
+| **Dataset**                          | **Parquet-Dask**             | **HDF5-Dask**                | **Parquet-DuckDB**           |
+| ------------------------------------ | ---------------------------- | ---------------------------- | ---------------------------- |
+| *Weather augmentations*              | 199 + 29 sec                 | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
+| *Middle School augmentations*        | <Cluster> + 894 sec          | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
+| *High School augmentations*          | <Cluster> + 1033 sec         | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
+| *Individual Landmarks augmentations* | <Cluster> + 890 sec          | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
+| *Scenic Landmarks*                   | <Cluster> + 513 sec          | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
+| *Businesses augmentations*           | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
+
+> Note: The directory `tasks\02` contains `sh` files, that run the above mentioned merging procedures for each year of the data separately. They also return the time required for the total merging time for all years with the selected augmentation dataset. These files were used to obtain the above results.
 
 ## Task 4 (Streaming)
 

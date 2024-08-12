@@ -178,7 +178,7 @@ def main():
 
     print("Merging datasets")
     if args.data_format in ["parquet", "hdf5"]:
-        tickets = tickets.merge(res, left_index=True, right_index=True)
+        tickets = tickets.merge(res, how="left", left_index=True, right_index=True)
         with ProgressBar():
             tickets = tickets.compute()
 
