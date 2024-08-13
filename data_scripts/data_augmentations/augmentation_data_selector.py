@@ -54,15 +54,15 @@ def get_center_location_from_polygon(data):
     data (pandas.DataFrame): The DataFrame containing polygon geometries in the 'the_geom' column.
 
     Returns:
-    pandas.DataFrame: The DataFrame with added 'long' and 'lat' columns representing the center locations.
+    pandas.DataFrame: The DataFrame with added 'Longitude' and 'Latitude' columns representing the center locations.
     """
     pattern = r"(?<=\(\().*?(?=\)\))"
     for idx, row in data.iterrows():
         if "EMPTY" in row["the_geom"]:
             continue
         center_location = _parse_geom(row["the_geom"], pattern)
-        data.loc[idx, "long"] = center_location[0]
-        data.loc[idx, "lat"] = center_location[1]
+        data.loc[idx, "Longitude"] = center_location[0]
+        data.loc[idx, "Latitude"] = center_location[1]
     return data
 
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     )
 
     landmarks_scenic_data = get_center_location_from_polygon(landmarks_scenic_data)
-    lsd_names = ["SCEN_LM_NA", "lat", "long"]
+    lsd_names = ["SCEN_LM_NA", "Latitude", "Longitude"]
     landmarks_scenic_data[lsd_names].dropna(subset=lsd_names).to_csv(
         os.path.join(MAIN_PATH, "landmarks", "landmarks_NYC_scenic_processed.csv"),
         index=False,
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     landmarks_individual_data = get_center_location_from_polygon(
         landmarks_individual_data
     )
-    lid_names = ["LPC_NAME", "lat", "long"]
+    lid_names = ["LPC_NAME", "Latitude", "Longitude"]
     landmarks_individual_data[lid_names].dropna(subset=lid_names).to_csv(
         os.path.join(MAIN_PATH, "landmarks", "landmarks_NYC_individual_processed.csv"),
         index=False,

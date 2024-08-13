@@ -96,7 +96,7 @@ def create_rtree_index(df, name):
         rtree.index.Index: An R-tree index with the business data.
     """
     idx = Index()
-    for i, row in enumerate(df.iterrows()):
+    for i, row in tqdm(enumerate(df.iterrows()), total=df.shape[0]):
         row = row[1]
         idx.insert(
             i,
@@ -106,8 +106,8 @@ def create_rtree_index(df, name):
                 "industry": row["Industry"],
                 "lat": row["Latitude"],
                 "long": row["Longitude"],
-                "active_from": row["License Creation Date"],
-                "active_to": row["License Expiration Date"],
+                "active_from": pd.Timestamp(row["License Creation Date"], unit="ms").timestamp() * 1000,
+                "active_to": pd.Timestamp(row["License Expiration Date"], unit="ms").timestamp() * 1000,
             },
         )
     return idx
@@ -224,7 +224,7 @@ def main():
 
     print("Merging datasets")
     if args.data_format in ["parquet", "hdf5"]:
-        tickets = tickets.merge(res, left_index=True, right_index=True, how="left")
+        tickets = tickets.merge(res, how="left", left_index=True, right_index=True)
         with ProgressBar():
             tickets = tickets.compute()
 
