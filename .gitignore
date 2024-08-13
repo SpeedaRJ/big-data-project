@@ -8,6 +8,12 @@ data/additional_data/events/
 data/additional_data/businesses/
 data/augmented_data/
 
+#tmp
+local_merging_tests\ copy\ 2.ipynb
+local_merging_tests\ copy\ 3.ipynb
+local_merging_tests\ copy\ 4.ipynb
+local_merging_tests_copy.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
