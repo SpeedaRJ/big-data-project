@@ -163,11 +163,11 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 2. Run the consumer(s) - consume the specified topics containing rolling descriptive statistics.
     ```bash
-    python ./tasks/04/simple_topic_consumer.py --topics <topic1> <topic2> <topic3> ... --save <False|True>
+    python ./tasks/04/simple_topic_consumer.py --topics <topic1> <topic2> <topic3> ... --save_path <folder for saving results>
     ```
 
     ```bash
-    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets kmeans birch --save True
+    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets kmeans birch --save_path "./tasks/04/results"
     ```
 
 3. Run the stream processing program(s) that will consume raw data and produce rolling descriptive statistics.
@@ -177,5 +177,9 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 4. Run the producer - stream each line from specified raw files (We assume the data is chronologically ordered).
     ```bash
-    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/full_data_cleaned.parquet" --weather_file "./data/additional_data/weather/weather_NYC_2013_2024_processed.csv" --fiscal_year 2014 --limit -1
+    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/filtered/<year>_filtered.parquet" --limit -1
+    ```
+
+    ```bash
+    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/filtered/2024_filtered.parquet" --limit -1
     ```

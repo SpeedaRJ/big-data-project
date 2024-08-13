@@ -73,9 +73,9 @@ TOP_STREETS = [10010, 10110, 10210, 10410, 10510, 10810, 13610, 24890, 25390, 59
 @app.agent(topic)
 async def rolling_stats(stream):
     async for values in stream.take(WINDOW_SIZE, within=10): # within specifies the time window to wait for more data
-        df = pd.DataFrame(columns=["VEHICLE_MAKE", "VEHICLE_YEAR", "BOROUGH", "STREET_NAME"])
+        df = pd.DataFrame(columns=["VEHICLE_MAKE", "VEHICLE_YEAR", "BOROUGH", "STREET_NAME", "STREET_CODE1"])
         for value in values:
-            df.loc[len(df)] = [value.VEHICLE_MAKE, value.VEHICLE_YEAR, value.VIOLATION_COUNTY, value.STREET_NAME]
+            df.loc[len(df)] = [value.VEHICLE_MAKE, value.VEHICLE_YEAR, value.VIOLATION_COUNTY, value.STREET_NAME, value.STREET_CODE1]
         df["VEHICLE_YEAR"] = pd.to_numeric(df["VEHICLE_YEAR"], errors='coerce')
         current_year = value.ISSUE_DATE.split("-")[0] # sent values from producer value["Issue Date"].strftime("%Y-%m-%d")
         
@@ -138,7 +138,7 @@ WINDOW_SIZE = 1024
 N_CLUSTERS = 8
 
 @app.agent(topic)
-async def rolling_stats(stream):
+async def spatial_clustering(stream):
     kmeans = MiniBatchKMeans(n_clusters=N_CLUSTERS, batch_size=WINDOW_SIZE, random_state=42)
     # birch = Birch(n_clusters=N_CLUSTERS)
     async for values in stream.take(WINDOW_SIZE, within=10): # within specifies the time window to wait for more data
