@@ -20,6 +20,8 @@ Directory tree view of the repository
 ```sh
 .
 ├── data
+│   ├── augmented_data
+│   │   └── ...
 │   ├── additional_data
 │   │   ├── businesses
 │   │   ├── landmarks
@@ -36,6 +38,8 @@ Directory tree view of the repository
 │       └── raw
 ├── data_scripts
 │   ├── data_augmentations
+│   ├── EDA
+│   ├── ML
 │   └── tmp
 ├── notebooks
 ├── results
@@ -133,16 +137,20 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 - Merging the business information, largely follows the above procedure, with a few additional steps: Instead of retrieving the single closest entity to the location of the parking violation, we retrieve `n=1` entities, ordered by distance. We then filter these entities based on the `Issue Date` column to check if it falls between the businesses license creation and license expiration dates. We retrieve the entity in the first row of said result. If no result is given, we perform a recursive search with `n=n * 2`. We do this to limit the computational time, but still ensure we get a result for each entry. Here, instead of the above pair, we store `(<closest entity name>, <industry of ce>, <distance to ce>)`, since we tough this information might be interesting.
 
 ### Merging Times
-| **Dataset**                          | **Parquet-Dask**             | **HDF5-Dask**                | **Parquet-DuckDB**           |
-| ------------------------------------ | ---------------------------- | ---------------------------- | ---------------------------- |
-| *Weather augmentations*              | 199 + 29 sec                 | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
-| *Middle School augmentations*        | <Cluster> + 894 sec          | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
-| *High School augmentations*          | <Cluster> + 1033 sec         | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
-| *Individual Landmarks augmentations* | <Cluster> + 890 sec          | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
-| *Scenic Landmarks*                   | <Cluster> + 513 sec          | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
-| *Businesses augmentations*           | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec | <Cluster> + <2015 Local> sec |
+| **Dataset**                          | **Parquet-Dask**  | **HDF5-Dask** | **Parquet-DuckDB** |
+| ------------------------------------ | ----------------- | ------------- | ------------------ |
+| *Weather augmentations*              | sum([29, 25, 25, 0.04]) sec | sum([]) sec   | sum([]) sec        |
+| *Middle School augmentations*        | sum([894, 825, 772, 0.37]) sec    | sum([]) sec   | sum([]) sec        |
+| *High School augmentations*          | sum([1033, 941, 882, 0.34]) sec   | sum([]) sec   | sum([]) sec        |
+| *Individual Landmarks augmentations* | sum([890, 800, 767, 0.79]) sec    | sum([]) sec   | sum([]) sec        |
+| *Scenic Landmarks*                   | sum([513, 458, 443, 0.09]) sec    | sum([]) sec   | sum([]) sec        |
+| *Businesses augmentations*           | sum([14504, 13562, 13099, 13]) sec  | sum([]) sec   | sum([]) sec        |
+
+> TODO: Fill out above table
 
 > Note: The directory `tasks\02` contains `sh` files, that run the above mentioned merging procedures for each year of the data separately. They also return the time required for the total merging time for all years with the selected augmentation dataset. These files were used to obtain the above results.
+
+> Note: While the results may not completely show it, the processing time for the HDF5 file versions was 50% or faster than with the Parquet file versions when it came to processing with `dask` (e.g. `itertuples` taking 7 minutes to process compared to 15, and `merge` taking about 1 second compared to 20 - numbers given for average observation). The problem we did notice with the HDF5 file versions, was the speed of the I/O operations, particularly when it came to saving the data to files. However, it is unclear if this is a limitation of the file type, or our implementation of saving it / library we are using.
 
 ## Task 4 (Streaming)
 
@@ -155,11 +163,11 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 2. Run the consumer(s) - consume the specified topics containing rolling descriptive statistics.
     ```bash
-    python ./tasks/04/simple_topic_consumer.py --topics <topic1> <topic2> <topic3> ... --save <False|True>
+    python ./tasks/04/simple_topic_consumer.py --topics <topic1> <topic2> <topic3> ... --save_path <folder for saving results>
     ```
 
     ```bash
-    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets kmeans birch --save True
+    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets kmeans birch --save_path "./tasks/04/results"
     ```
 
 3. Run the stream processing program(s) that will consume raw data and produce rolling descriptive statistics.
@@ -169,5 +177,9 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 4. Run the producer - stream each line from specified raw files (We assume the data is chronologically ordered).
     ```bash
-    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/full_data_cleaned.parquet" --weather_file "./data/additional_data/weather/weather_NYC_2013_2024_processed.csv" --fiscal_year 2014 --limit -1
+    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/filtered/<year>_filtered.parquet" --limit -1
+    ```
+
+    ```bash
+    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/filtered/2024_filtered.parquet" --limit -1
     ```

@@ -179,7 +179,7 @@ def computational_wrapper(row, lat_i, long_i, idx, time_i, n=16):
 def main():
     args = parse_args()
 
-    print("Reading data")
+    print(f"Reading dataset: {os.path.split(args.tickets_location)[-1]}")
     secondary_df = pd.read_csv(args.df2_location)
 
     if args.data_format == "parquet":
@@ -221,7 +221,6 @@ def main():
 
     del tickets_subset
     del idx
-
 
     print("Merging datasets")
     if args.data_format in ["parquet", "hdf5"]:

@@ -51,7 +51,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    print("Reading datasets")
+    print(f"Reading dataset: {os.path.split(args.tickets_location)[-1]}")
     weather = pd.read_csv(args.weather_location, sep=";")
     weather["datetime"] = pd.to_datetime(weather["datetime"]).astype(np.int64) // 10**6
 
