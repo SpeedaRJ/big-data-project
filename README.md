@@ -20,8 +20,9 @@ Directory tree view of the repository
 ```sh
 .
 ├── data
-│   ├── augmented_data
-│   │   └── ...
+│   ├── aggregated_data
+│   │   ├── parquet
+│   │   └── hdf5
 │   ├── additional_data
 │   │   ├── businesses
 │   │   ├── landmarks
@@ -128,6 +129,8 @@ We obtained our data for augmentations from various sources, most coming in diff
 - From NYC OpenData, we also obtained the [2021 DOE High School Directory](https://data.cityofnewyork.us/Education/2021-DOE-High-School-Directory/8b6c-7uty/about_data) and [2021 DOE Middle School Directory](https://data.cityofnewyork.us/Education/2021-DOE-Middle-School-Directory/f6s7-vytj/about_data) dataset on school locations. These were the most up to date datasets we were able to find on their website.
 - Lastly, again from NYC OpenData, we also obtained the [Scenic Landmarks (Map)](https://data.cityofnewyork.us/Housing-Development/Scenic-Landmarks-Map-/gi7d-8gt5) and [Individual Landmark Sites (Map)](https://data.cityofnewyork.us/Housing-Development/Individual-Landmark-Sites-Map-/ts56-fkf5) datasets, which give us the spatial positioning of important New York landmarks.
 
+> Note: We also planned to join Event data for each date, but we were unable to find an appropriate location attribute to use for merging.
+
 ### Preprocessing and Merging Procedure
 All preprocessing steps for files can be found in `data_scripts\data_augmentations\augmentation_data_selector.py`. But to summarize, for each of the location based datasets (schools, landmarks and businesses) we kept the spatial information and some attributes of interest (typically only name). Businesses were slightly special in this, as we also had to consider when the business was operational, so we also kept that information. For weather, we kept the date column, as well as the columns we assumed most interesting in the context of EDA and ML for tasks 3 and 5. While the business and schools datasets gave us explicit latitude and longitude coordinates, the landmarks only contained the information of the polygon of any given landmark (list of coordinates that construct the outline of the landmark). Because we deemed this to complicated to merge later on, we implemented a procedure that extracted the central location of the landmark, based on it's polygon, and we stored that for later.
 
@@ -137,14 +140,14 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 - Merging the business information, largely follows the above procedure, with a few additional steps: Instead of retrieving the single closest entity to the location of the parking violation, we retrieve `n=1` entities, ordered by distance. We then filter these entities based on the `Issue Date` column to check if it falls between the businesses license creation and license expiration dates. We retrieve the entity in the first row of said result. If no result is given, we perform a recursive search with `n=n * 2`. We do this to limit the computational time, but still ensure we get a result for each entry. Here, instead of the above pair, we store `(<closest entity name>, <industry of ce>, <distance to ce>)`, since we tough this information might be interesting.
 
 ### Merging Times
-| **Dataset**                          | **Parquet-Dask**  | **HDF5-Dask** | **Parquet-DuckDB** |
-| ------------------------------------ | ----------------- | ------------- | ------------------ |
-| *Weather augmentations*              | sum([29, 25, 25, 0.04]) sec | sum([]) sec   | sum([]) sec        |
-| *Middle School augmentations*        | sum([894, 825, 772, 0.37]) sec    | sum([]) sec   | sum([]) sec        |
-| *High School augmentations*          | sum([1033, 941, 882, 0.34]) sec   | sum([]) sec   | sum([]) sec        |
-| *Individual Landmarks augmentations* | sum([890, 800, 767, 0.79]) sec    | sum([]) sec   | sum([]) sec        |
-| *Scenic Landmarks*                   | sum([513, 458, 443, 0.09]) sec    | sum([]) sec   | sum([]) sec        |
-| *Businesses augmentations*           | sum([14504, 13562, 13099, 13]) sec  | sum([]) sec   | sum([]) sec        |
+| **Dataset**                          | **Parquet-Dask** | **HDF5-Dask** | **Parquet-DuckDB** |
+| ------------------------------------ | ---------------- | ------------- | ------------------ |
+| *Weather augmentations*              | 166.04 sec       | sum([]) sec   | sum([]) sec        |
+| *Middle School augmentations*        | 6169.37 sec      | sum([]) sec   | sum([]) sec        |
+| *High School augmentations*          | 7118.34 sec      | sum([]) sec   | sum([]) sec        |
+| *Individual Landmarks augmentations* | 6164.79 sec      | sum([]) sec   | sum([]) sec        |
+| *Scenic Landmarks*                   | 3475.09 sec      | sum([]) sec   | sum([]) sec        |
+| *Businesses augmentations*           | 120755 sec       | sum([]) sec   | sum([]) sec        |
 
 > TODO: Fill out above table
 
