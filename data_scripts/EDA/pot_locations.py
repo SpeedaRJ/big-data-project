@@ -1,6 +1,7 @@
 import os
 import sys
 
+import contextily as ctx
 import dask.dataframe as dd
 import geopandas as gpd
 import geoplot as gplt
@@ -75,6 +76,11 @@ def make_plot(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         label="Businesses",
         ylabel="",
     )
+
+    ctx.add_basemap(axs[0], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
+    ctx.add_basemap(axs[1], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
+    ctx.add_basemap(axs[2], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
+
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
 
