@@ -61,7 +61,7 @@ def make_plot_reg(
         kind="barh",
         figsize=(10, 10),
         title="Number of tickets per day of Weather Condition",
-        color="skyblue",
+        color="#1b9e77",
     )
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
