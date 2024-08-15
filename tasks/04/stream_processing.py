@@ -66,10 +66,11 @@ async def rolling_stats(stream):
         
         # rolling statistics for boroughs
         boroughs = df.groupby("BOROUGH")
+        borough_statistics = []
         for group_name, group_df in boroughs:
             vehicle_make_boroughs = group_df["VEHICLE_MAKE"].value_counts().to_dict()
             temp = group_df[(group_df["VEHICLE_YEAR"] > 0) & (group_df["VEHICLE_YEAR"] < int(current_year))]
-            await rolling_stats_boroughs_topic.send(value={
+            borough_statistics.append({
                 "borough": group_name,
                 "vehicle_make": vehicle_make_boroughs, 
                 "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
@@ -80,15 +81,17 @@ async def rolling_stats(stream):
                 "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
                 "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
             })
+        await rolling_stats_boroughs_topic.send(value=borough_statistics)
             
         
         # rolling statistics for streets
         streets = df[df["STREET_CODE1"].isin(TOP_STREETS)]
         streets = streets.groupby("STREET_CODE1")
+        street_statistics = []
         for group_name, group_df in streets:
             vehicle_make_streets = group_df["VEHICLE_MAKE"].value_counts().to_dict()
             temp = group_df[(group_df["VEHICLE_YEAR"] > 0) & (group_df["VEHICLE_YEAR"] < int(current_year))]
-            await rolling_stats_streets_topic.send(value={
+            street_statistics.append({
                 "street_code1": group_name,
                 "vehicle_make": vehicle_make_streets, 
                 "vehicle_year_mean": str(temp["VEHICLE_YEAR"].mean()),
@@ -99,12 +102,12 @@ async def rolling_stats(stream):
                 "vehicle_year_per_50": str(temp["VEHICLE_YEAR"].quantile(0.50)),
                 "vehicle_year_per_75": str(temp["VEHICLE_YEAR"].quantile(0.75))
             })
+        await rolling_stats_streets_topic.send(value=street_statistics)
 
 
 
 ##### spatial stream clustering
 kmeans_topic = app.topic('kmeans', value_serializer='json', internal=True, partitions=1)
-birch_topic = app.topic('birch', value_serializer='json', internal=True, partitions=1)
 WINDOW_SIZE = 100
 N_CLUSTERS = 5
 
