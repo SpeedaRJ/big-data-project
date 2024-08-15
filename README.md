@@ -170,7 +170,7 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
     ```
 
     ```bash
-    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets kmeans birch --save_path "./tasks/04/results"
+    python ./tasks/04/simple_topic_consumer.py --topics rolling_stats_all rolling_stats_boroughs rolling_stats_streets kmeans --save_path "./tasks/04/results"
     ```
 
 3. Run the stream processing program(s) that will consume raw data and produce rolling descriptive statistics.
