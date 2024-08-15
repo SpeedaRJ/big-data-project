@@ -8,6 +8,9 @@ import geoplot as gplt
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+
+sns.set_theme(style="dark")
 
 sys.path.insert(
     0,
@@ -50,7 +53,7 @@ def read_data(location, format):
 
 
 def make_plot(
-    data, nyc_boroughs, save_path="../../tasks/03/figs/location_density.png"
+    data, nyc_boroughs, save_path
 ):
     fig, ax = plt.subplots(
         1, 1, figsize=(12, 8)
