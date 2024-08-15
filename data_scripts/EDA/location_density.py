@@ -38,9 +38,9 @@ def parse_args():
 def read_data(location, format):
     files = glob.glob(f"{location}*.{format}")
     if format == "parquet":
-        data = pd.read_parquet(location).sample(frac=0.02)
+        data = pd.concat([pd.read_parquet(file) for file in files[::2]]).sample(frac=0.01)
     elif format == "h5":
-        data = pd.concat([read_hdf5(file) for file in files]).sample(frac=0.02)
+        data = pd.concat([read_hdf5(file) for file in files[::2]]).sample(frac=0.01)
     geo_df = gpd.GeoDataFrame(
         data,
         crs="EPSG:4326",
@@ -52,14 +52,11 @@ def read_data(location, format):
 def make_plot(
     data, nyc_boroughs, save_path="../../tasks/03/figs/location_density.png"
 ):
-    fig, ax = plt.subplots(
-        1, 1, figsize=(12, 8)
-    )
-    nyc_boroughs.plot(ax=ax, alpha=0.4, edgecolor="k", zorder=1)
+    ax = gplt.polyplot(nyc_boroughs, figsize=(12,12), projection=gplt.crs.AlbersEqualArea(), zorder=1, edgecolor="k")
     gplt.kdeplot(
         data,
         cmap="mako",
-        levels=np.linspace(0, 1, 16),
+        thresh=0.05,
         alpha=1,
         ax=ax,
         clip=nyc_boroughs.geometry,
@@ -76,7 +73,7 @@ def make_plot(
         legend_kwargs={"loc": "upper left"},
     )
     plt.tight_layout()
-    plt.title("Distribution of parking tickets in New York City (Sampled)")
+    # plt.title("Distribution of parking tickets in New York City (Sampled)")
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
     plt.savefig(save_path, dpi=300)
@@ -84,15 +81,13 @@ def make_plot(
 
 if __name__ == "__main__":
     args = parse_args()
+    print("Reading Data...")
     data = read_data(args.input_location, args.data_format)
-    geo_df = gpd.GeoDataFrame(
-        data,
-        crs="EPSG:4326",
-        geometry=gpd.points_from_xy(data["Longitude"], data["Latitude"]),
-    )
+    print(f"Have read {data.shape[0]} rows of data.")
 
     nyc_boroughs = gpd.read_file(gplt.datasets.get_path("nyc_boroughs"))
 
+    print("Making Plot...")
     make_plot(
         data,
         nyc_boroughs,
