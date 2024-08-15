@@ -2,6 +2,7 @@ import argparse
 import glob
 import os
 import sys
+import time
 
 import dask.dataframe as dd
 import matplotlib.pyplot as plt
@@ -56,19 +57,25 @@ def make_plot(data, save_path):
             "Distance to CB",
         ],
         showfliers=False,
-        figsize=(14, 6),
+        figsize=(12, 6),
     )
     plt.yscale("log")
     plt.ylabel("Distance [km]")
     # plt.title("Metrics of distances to nearest points of interest (per category)")
+    plt.tight_layout()
     plt.savefig(save_path, dpi=300)
 
 
 if __name__ == "__main__":
     args = parse_args()
+
+    tic = time.time()
+
     data = read_data(args.input_location, args.data_format)
 
     make_plot(
         data,
         save_path=f"../../tasks/03/figs/distances_statistical_description_{args.data_format}.png",
     )
+
+    print(f"Done in {time.time() - tic:.2f} seconds.")

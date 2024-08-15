@@ -2,11 +2,11 @@ import argparse
 import glob
 import os
 import sys
+import time
 
 import geopandas as gpd
 import geoplot as gplt
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -79,20 +79,22 @@ def make_plot(
     # plt.title("Distribution of parking tickets in New York City (Sampled)")
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
+    plt.tight_layout()
     plt.savefig(save_path, dpi=300)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    print("Reading Data...")
-    data = read_data(args.input_location, args.data_format)
-    print(f"Have read {data.shape[0]} rows of data.")
 
+    tic = time.time()
+
+    data = read_data(args.input_location, args.data_format)
     nyc_boroughs = gpd.read_file(gplt.datasets.get_path("nyc_boroughs"))
 
-    print("Making Plot...")
     make_plot(
         data,
         nyc_boroughs,
-        save_path=f"../../tasks/03/figs/location_density_{args.data_format}.png",
+        save_path=f"../../tasks/03/figs/location_density.png",
     )
+
+    print(f"Done in {time.time() - tic:.2f} seconds.")

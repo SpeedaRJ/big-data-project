@@ -2,6 +2,7 @@ import argparse
 import glob
 import os
 import sys
+import time
 
 import dask.dataframe as dd
 import matplotlib.pyplot as plt
@@ -62,15 +63,19 @@ def make_plot_reg(
         title="Number of tickets per day of Weather Condition",
         color="skyblue",
     )
+    plt.tight_layout()
     plt.savefig(save_path, dpi=300)
 
 
 if __name__ == "__main__":
     args = parse_args()
+
+    tic = time.time()
+
     data = read_data(args.input_location, args.data_format)
 
     weather_data = dd.read_csv(
-        "../data/additional_data/weather/weather_NYC_2013_2024_processed.csv", sep=";"
+        "../../data/additional_data/weather/weather_NYC_2013_2024_processed.csv", sep=";"
     )
 
     if not args.data_format == "duckdb":
@@ -81,3 +86,5 @@ if __name__ == "__main__":
         )
     else:
         ...
+
+    print(f"Done in {time.time() - tic:.2f} seconds.")

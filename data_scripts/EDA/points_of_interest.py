@@ -2,6 +2,7 @@ import argparse
 import glob
 import os
 import sys
+import time
 
 import dask.dataframe as dd
 import geopandas as gpd
@@ -46,14 +47,14 @@ def read_data(location, format):
     return data
 
 
-def compute_points(data, complementary_data, name):
+def compute_points(data, complementary_data, column, name):
     return (
-        data.groupby("Closest Middle School")["Summons Number"]
+        data.groupby(column)["Summons Number"]
         .count()
         .to_frame()
         .sort_values(by="Summons Number", ascending=False)
         .merge(complementary_data, left_index=True, right_on=name)
-        .head(10)
+        .head(10, npartitions=-1)
     )
 
 
@@ -116,41 +117,50 @@ def make_plot_reg(ms_data, hs_data, li_data, ls_data, b_data, save_path):
     )
     # plt.title("Top 10 Closest Points of Interest w.r.t. Number of Parking Tickets Issued")
     plt.legend(loc='upper left')
+    plt.tight_layout()
     plt.savefig(save_path, dpi=300)
 
 
 if __name__ == "__main__":
     args = parse_args()
+
+    tic = time.time()
+
     data = read_data(args.input_location, args.data_format)
 
     ms_data = dd.read_csv(
-        "../data/additional_data/schools/middle_schools_NYC_2021_processed.csv"
+        "../../data/additional_data/schools/middle_schools_NYC_2021_processed.csv"
     )
     hs_data = dd.read_csv(
-        "../data/additional_data/schools/high_schools_NYC_2021_processed.csv"
+        "../../data/additional_data/schools/high_schools_NYC_2021_processed.csv"
     )
     li_data = dd.read_csv(
-        "../data/additional_data/landmarks/landmarks_NYC_individual_processed.csv"
+        "../../data/additional_data/landmarks/landmarks_NYC_individual_processed.csv"
     )
     ls_data = dd.read_csv(
-        "../data/additional_data/landmarks/landmarks_NYC_scenic_processed.csv"
+        "../../data/additional_data/landmarks/landmarks_NYC_scenic_processed.csv"
     )
     try:
         b_data = dd.read_csv(
-            "../data/additional_data/businesses/businesses_NYC_2023_processed.csv"
+            "../../data/additional_data/businesses/businesses_NYC_2023_processed.csv"
         )
     except:
         b_data = dd.read_csv(
             "/d/hpc/projects/FRI/bigdata/students/lsrj/data/additional_data/businesses/businesses_NYC_2023_processed.csv"
         )
 
-    ms_freq = compute_points(data, ms_data)
-    hs_freq = compute_points(data, hs_data)
-    li_freq = compute_points(data, li_data)
-    ls_freq = compute_points(data, ls_data)
-    b_freq = compute_points(data, b_data)
+    ms_freq = compute_points(data, ms_data, "Closest Middle School", "name")
+    hs_freq = compute_points(data, hs_data, "Closest High School", "school_name")
+    li_freq = compute_points(data, li_data, "Closest Individual Landmark", "LPC_NAME")
+    ls_freq = compute_points(data, ls_data, "Closest Scenic Landmark", "SCEN_LM_NA")
+    b_freq = compute_points(data, b_data, "Closest Business", "Business Name")
 
-    make_plot_reg(
-        data,
-        save_path=f"../../tasks/03/figs/top_points_of_interest_{args.data_format}.png",
-    )
+    if not args.data_format == "duckdb":
+        make_plot_reg(
+            ms_freq, hs_freq, li_freq, ls_freq, b_freq,
+            save_path=f"../../tasks/03/figs/top_points_of_interest_{args.data_format}.png",
+        )
+    else:
+        ...
+
+    print(f"Done in {time.time() - tic:.2f} seconds.")

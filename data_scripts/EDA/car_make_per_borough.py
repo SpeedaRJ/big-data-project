@@ -2,6 +2,7 @@ import argparse
 import glob
 import os
 import sys
+import time
 
 import dask.dataframe as dd
 import matplotlib.pyplot as plt
@@ -29,7 +30,7 @@ def parse_args():
     parser.add_argument(
         "--data_format",
         type=str,
-        choices=["parquet", "h5"],
+        choices=["parquet", "h5", "duckdb"],
         help="The format of the input data file (parquet or hdf5).",
     )
     return parser.parse_args()
@@ -76,16 +77,25 @@ def make_plot_reg(data, save_path):
         plt.bar(tmp.index, tmp.values, color=color_map[data.index[i]])
         plt.title(data.index[i])
 
+    plt.tight_layout()
     plt.savefig(save_path, dpi=300)
 
 
 if __name__ == "__main__":
     args = parse_args()
+
+    tic = time.time()
+
     data = read_data(args.input_location, args.data_format)
 
     counts_per_borough = compute_counts(data)
 
-    make_plot_reg(
-        data,
-        save_path=f"../../tasks/03/figs/car_make_per_borough_{args.data_format}.png",
-    )
+    if not args.data_format == "duckdb":
+        make_plot_reg(
+            counts_per_borough,
+            save_path=f"../../tasks/03/figs/car_make_per_borough_{args.data_format}.png",
+        )
+    else:
+        ...
+
+    print(f"Done in {time.time() - tic:.2f} seconds.")
