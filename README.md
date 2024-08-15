@@ -155,6 +155,20 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 > Note: While the results may not completely show it, the processing time for the HDF5 file versions was 50% or faster than with the Parquet file versions when it came to processing with `dask` (e.g. `itertuples` taking 7 minutes to process compared to 15, and `merge` taking about 1 second compared to 20 - numbers given for average observation). The problem we did notice with the HDF5 file versions, was the speed of the I/O operations, particularly when it came to saving the data to files. However, it is unclear if this is a limitation of the file type, or our implementation of saving it / library we are using.
 
+## Task 3
+
+| **Plot**                           | **Time for Parquet** | **Time for HDF5** | **Time for DuckDB** |
+| ---------------------------------- | -------------------- | ----------------- | ------------------- |
+| *Location Density*                 | 192.95 sec           | < Missing > sec   | N/A                 |
+| *Distances Statistics*             | 16.62 sec            | < Missing > sec   | N/A                 |
+| *Car Make Per Borough*             | 13.94 sec            | < Missing > sec   | < Missing > sec     |
+| *Interesting PoTs*                 | 130.24 sec           | < Missing > sec   | < Missing > sec     |
+| *Violations Per Weather Condition* | 26.08 sec            | < Missing > sec   | < Missing > sec     |
+
+> TODO: Fill out above table
+
+> Note: Plotting the locations of all points of interest took 2.93 seconds. Since it only involves reading CSV files, it isn't included above.
+
 ## Task 4 (Streaming)
 
 1. Set up kafka with docker (we use the same configuration as we used in the assignment)

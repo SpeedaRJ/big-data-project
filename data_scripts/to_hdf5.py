@@ -31,7 +31,7 @@ def process_type(type):
     if type == np.int64 or type == np.int32:
         return "<i8"
     if type == np.dtype("O") or type == "string":
-        return "S1"
+        return h5py.string_dtype(encoding="utf-8")
     if type == np.float64:
         return "float"
     raise ValueError(f"Unknown type {type}")
