@@ -180,9 +180,9 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 4. Run the producer - stream each line from specified raw files (We assume the data is chronologically ordered).
     ```bash
-    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/filtered/<year>_filtered.parquet" --limit -1
+    python ./tasks/04/data_producer.py --tickets_file <file_path> --limit -1
     ```
 
     ```bash
-    python ./tasks/04/data_producer.py --tickets_file "./data/parking_tickets/parquet/filtered/2024_filtered.parquet" --limit -1
+    python ./tasks/04/data_producer.py --tickets_file "./data/aggregated_data/parquet/tickets_full_merge_2024.parquet" --limit -1
     ```
