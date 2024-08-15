@@ -7,6 +7,7 @@ data/parking_tickets/
 data/additional_data/events/
 data/additional_data/businesses/
 data/augmented_data/
+data/aggregated_data/
 
 #tmp
 local_merging_tests\ copy\ 2.ipynb
