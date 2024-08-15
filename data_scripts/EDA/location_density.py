@@ -65,6 +65,7 @@ def make_plot(
         clip=nyc_boroughs.geometry,
         zorder=3,
     )
+    
     gplt.pointplot(
         data,
         hue="Violation County",
@@ -72,7 +73,7 @@ def make_plot(
         legend=True,
         alpha=0.25,
         zorder=2,
-        cmap=sns.color_palette("Dark2", 5, as_cmap=True),
+        cmap="Dark2",
         legend_kwargs={"loc": "upper left"},
     )
     plt.tight_layout()

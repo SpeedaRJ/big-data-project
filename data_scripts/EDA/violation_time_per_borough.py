@@ -47,7 +47,7 @@ def read_data(location, format):
 
 
 def subset_data(data):
-    subset = data[["Violation Precinct", "From Hours In Effect", "To Hours In Effect"]]
+    subset = data[["Violation County", "From Hours In Effect", "To Hours In Effect"]]
     subset = subset[
         (subset["From Hours In Effect"] != "") & (subset["To Hours In Effect"] != "")
     ]
@@ -105,6 +105,7 @@ def _aggregate_data(data):
     )
 
     data["time_diff"] = data["time_diff"].astype(float)
+    return data
 
 
 def make_plot_reg(data, save_path):
@@ -117,11 +118,15 @@ def make_plot_reg(data, save_path):
         finalize=lambda count, sum: sum / count,
     )
 
-    data.groupby("Violation Precinct")["time_diff"].aggregate(
+    data.groupby("Violation County")["time_diff"].aggregate(
         custom_mean
-    ).to_frame().sort_values(by="time_diff", ascending=False).head(16).plot(
-        kind="bar", figsize=(20, 10)
+    ).to_frame().sort_values(by="time_diff", ascending=False).compute().plot.barh(
+        figsize=(12, 12),
+        color="skyblue",
+        edgecolor="black",
+        legend=False,
     )
+
     plt.legend("")
     plt.ylabel(None)
     plt.tight_layout()
@@ -140,7 +145,7 @@ if __name__ == "__main__":
     if not args.data_format == "duckdb":
         make_plot_reg(
             data,
-            save_path=f"../../tasks/03/figs/time_per_precinct_{args.data_format}.png",
+            save_path=f"../../tasks/03/figs/time_per_borough_{args.data_format}.png",
         )
     else:
         ...

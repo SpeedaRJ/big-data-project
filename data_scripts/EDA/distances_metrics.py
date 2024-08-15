@@ -65,17 +65,10 @@ def make_plot(data, save_path):
         ],
         showfliers=False,
         figsize=(12, 6),
-        color=dict(
-            boxes=_pallete_to_hex(pallete[7]),
-            whiskers=_pallete_to_hex(pallete[9]),
-            medians=_pallete_to_hex(pallete[1]),
-            caps=_pallete_to_hex(pallete[9]),
-        ),
-        boxprops=dict(linestyle="-", linewidth=1.5),
-        flierprops=dict(linestyle="-", linewidth=1.5),
-        medianprops=dict(linestyle="-", linewidth=1.5),
-        whiskerprops=dict(linestyle="-", linewidth=1.5),
-        capprops=dict(linestyle="-", linewidth=1.5),
+        boxprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[7])),
+        medianprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[1])),
+        whiskerprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[9])),
+        capprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[9])),
     )
     plt.yscale("log")
     plt.ylabel("Distance [km]")
