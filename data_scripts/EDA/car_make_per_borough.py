@@ -5,6 +5,7 @@ import sys
 import time
 
 import dask.dataframe as dd
+import duckdb
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -67,7 +68,7 @@ def make_plot_reg(data, save_path):
         "Brooklyn": "#66a61e",
         "Manhattan": "#d95f02",
         "Queens": "#e7298a",
-        "Staten Island": "#1b9e77"
+        "Staten Island": "#1b9e77",
     }
 
     for i in range(5):
@@ -81,6 +82,40 @@ def make_plot_reg(data, save_path):
     plt.savefig(save_path, dpi=300)
 
 
+def make_plot_duckdb(data, save_path):
+    data = data.compute()
+    duckdb.query(
+        'CREATE TEMP TABLE IF NOT EXISTS counts AS SELECT "Violation County", "Vehicle Make", count(*) as NumMake FROM data GROUP BY "Violation County", "Vehicle Make" ORDER BY count(*) DESC;'
+    )
+    res = (
+        duckdb.query(
+            'WITH PairCounts AS (SELECT "Violation County", "Vehicle Make", NumMake, ROW_NUMBER() OVER (PARTITION BY "Violation County" ORDER BY NumMake DESC) AS rn FROM counts) SELECT  "Violation County", "Vehicle Make", NumMake FROM PairCounts WHERE rn <= 10 GROUP BY "Violation County", "Vehicle Make", NumMake ORDER BY "Violation County", NumMake DESC;'
+        )
+        .to_df()
+        .groupby("Violation County")
+    )
+
+    fig = plt.figure(figsize=(30, 20))
+    columns = 3
+    rows = 2
+
+    color_map = {
+        "Bronx": "#7570b3",
+        "Brooklyn": "#66a61e",
+        "Manhattan": "#d95f02",
+        "Queens": "#e7298a",
+        "Staten Island": "#1b9e77",
+    }
+
+    for i, (name, group) in enumerate(res):
+        fig.add_subplot(rows, columns, i + 1)
+        plt.bar(group["Vehicle Make"], group["NumMake"], color=color_map[name])
+        plt.title(name)
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300)
+
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -88,14 +123,16 @@ if __name__ == "__main__":
 
     data = read_data(args.input_location, args.data_format)
 
-    counts_per_borough = compute_counts(data)
-
     if not args.data_format == "duckdb":
+        counts_per_borough = compute_counts(data)
         make_plot_reg(
             counts_per_borough,
             save_path=f"../../tasks/03/figs/car_make_per_borough_{args.data_format}.png",
         )
     else:
-        ...
+        make_plot_duckdb(
+            data,
+            save_path=f"../../tasks/03/figs/car_make_per_borough_{args.data_format}.png",
+        )
 
     print(f"Done in {time.time() - tic:.2f} seconds.")
