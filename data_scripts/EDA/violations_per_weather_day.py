@@ -77,6 +77,7 @@ def make_plot_duckdb(data, save_path):
         figsize=(10, 10),
         title="Number of tickets per day of Weather Condition",
         color="skyblue",
+        x="counts.conditions",
     )
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
