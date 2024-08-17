@@ -29,12 +29,14 @@ def make_plot(ms_data, hs_data, li_data, ls_data, b_data, save_path):
     nyc_boroughs.plot(ax=axs[1], alpha=0.4, edgecolor="k")
     nyc_boroughs.plot(ax=axs[2], alpha=0.4, edgecolor="k")
 
+    pallete = sns.color_palette("deep", 5)
+
     ms_data.compute().plot(
         kind="scatter",
         x="Longitude",
         y="Latitude",
         ax=axs[0],
-        color="red",
+        color=pallete[0],
         alpha=0.5,
         label="Middle Schools",
     )
@@ -43,7 +45,7 @@ def make_plot(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=axs[0],
-        color="blue",
+        color=pallete[1],
         alpha=0.5,
         label="High Schools",
     )
@@ -52,7 +54,7 @@ def make_plot(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=axs[1],
-        color="green",
+        color=pallete[2],
         alpha=0.5,
         label="Individual Landmarks",
     )
@@ -61,8 +63,8 @@ def make_plot(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=axs[1],
-        color="orange",
-        alpha=0.5,
+        color=pallete[3],
+        alpha=0.8,
         label="Scenic Landmarks",
         ylabel="",
     )
@@ -71,15 +73,20 @@ def make_plot(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=axs[2],
-        color="purple",
+        color=pallete[4],
         alpha=0.5,
         label="Businesses",
         ylabel="",
     )
 
-    ctx.add_basemap(axs[0], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
-    ctx.add_basemap(axs[1], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
-    ctx.add_basemap(axs[2], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
+    ctx.add_basemap(axs[0], crs=nyc_boroughs.crs.to_string(), zoom=12)
+    ctx.add_basemap(axs[1], crs=nyc_boroughs.crs.to_string(), zoom=12)
+    ctx.add_basemap(axs[2], crs=nyc_boroughs.crs.to_string(), zoom=12)
+
+    # Fallback if OpenStreetMap is not available
+    # ctx.add_basemap(axs[0], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
+    # ctx.add_basemap(axs[1], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
+    # ctx.add_basemap(axs[2], crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)

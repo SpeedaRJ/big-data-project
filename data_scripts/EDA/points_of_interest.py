@@ -4,6 +4,7 @@ import os
 import sys
 import time
 
+import contextily as ctx
 import dask.dataframe as dd
 import geopandas as gpd
 import geoplot as gplt
@@ -65,13 +66,15 @@ def make_plot_reg(ms_data, hs_data, li_data, ls_data, b_data, save_path):
 
     nyc_boroughs.plot(ax=ax, alpha=0.4, edgecolor="k")
 
+    pallete = sns.color_palette("deep", 5)
+
     ms_data.plot(
         kind="scatter",
         x="Longitude",
         y="Latitude",
         ax=ax,
-        color="red",
-        alpha=0.5,
+        color=pallete[0],
+        alpha=0.8,
         label="Middle Schools",
         s=ms_data["Summons Number"] / ms_data["Summons Number"].sum() * 500,
     )
@@ -80,8 +83,8 @@ def make_plot_reg(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=ax,
-        color="blue",
-        alpha=0.5,
+        color=pallete[1],
+        alpha=0.8,
         label="High Schools",
         s=hs_data["Summons Number"] / hs_data["Summons Number"].sum() * 500,
     )
@@ -90,8 +93,8 @@ def make_plot_reg(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=ax,
-        color="green",
-        alpha=0.5,
+        color=pallete[2],
+        alpha=0.8,
         label="Individual Landmarks",
         s=li_data["Summons Number"] / li_data["Summons Number"].sum() * 500,
     )
@@ -100,8 +103,8 @@ def make_plot_reg(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=ax,
-        color="orange",
-        alpha=0.5,
+        color=pallete[3],
+        alpha=0.8,
         label="Scenic Landmarks",
         s=ls_data["Summons Number"] / ls_data["Summons Number"].sum() * 500,
     )
@@ -110,11 +113,17 @@ def make_plot_reg(ms_data, hs_data, li_data, ls_data, b_data, save_path):
         x="Longitude",
         y="Latitude",
         ax=ax,
-        color="purple",
-        alpha=0.5,
+        color=pallete[4],
+        alpha=0.8,
         label="Businesses",
         s=b_data["Summons Number"] / b_data["Summons Number"].sum() * 500,
     )
+
+    # ctx.add_basemap(ax, crs=nyc_boroughs.crs.to_string(), zoom=12)
+
+    # Fallback if OpenStreetMap is not available
+    ctx.add_basemap(ax, crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron)
+
     # plt.title("Top 10 Closest Points of Interest w.r.t. Number of Parking Tickets Issued")
     plt.legend(loc='upper left')
     plt.tight_layout()

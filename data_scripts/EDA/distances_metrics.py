@@ -47,7 +47,14 @@ def read_data(location, format):
     return data
 
 
+def _pallete_to_hex(rgb):
+    rgb = [int(val * 256) for val in rgb]
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
+
+
 def make_plot(data, save_path):
+    pallete = sns.color_palette("deep", 10)
+
     data.compute().boxplot(
         column=[
             "Distance to CMS",
@@ -58,6 +65,10 @@ def make_plot(data, save_path):
         ],
         showfliers=False,
         figsize=(12, 6),
+        boxprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[7])),
+        medianprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[1])),
+        whiskerprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[9])),
+        capprops=dict(linewidth=1.5, color=_pallete_to_hex(pallete[9])),
     )
     plt.yscale("log")
     plt.ylabel("Distance [km]")

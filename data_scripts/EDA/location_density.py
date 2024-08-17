@@ -58,13 +58,14 @@ def make_plot(
     ax = gplt.polyplot(nyc_boroughs, figsize=(12,12), projection=gplt.crs.AlbersEqualArea(), zorder=1, edgecolor="k")
     gplt.kdeplot(
         data,
-        cmap="mako",
+        cmap="rocket_r",
         thresh=0.05,
         alpha=1,
         ax=ax,
         clip=nyc_boroughs.geometry,
         zorder=3,
     )
+    
     gplt.pointplot(
         data,
         hue="Violation County",
@@ -72,7 +73,7 @@ def make_plot(
         legend=True,
         alpha=0.25,
         zorder=2,
-        cmap="Reds",
+        cmap="Dark2",
         legend_kwargs={"loc": "upper left"},
     )
     plt.tight_layout()
@@ -80,7 +81,7 @@ def make_plot(
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300)
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
 
 
 if __name__ == "__main__":
