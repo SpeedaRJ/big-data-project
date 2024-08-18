@@ -88,21 +88,29 @@ def subset_data(data):
     subset = subset[~(subset["From Hours In Effect"] == "0  :")]
     subset = subset[~(subset["From Hours In Effect"] == "0  : AM")]
     subset = subset[~(subset["From Hours In Effect"] == "0  : PM")]
-    subset = subset[~(subset["From Hours In Effect"].str.contains('^[0-9]{4}$'))]
-    subset = subset[~(subset["From Hours In Effect"].str.contains('^[0-9]{2}\ '))]
-    subset = subset[~(subset["From Hours In Effect"].str.contains('^[0-9]{2}$'))]
-    subset = subset[~(subset["From Hours In Effect"].str.contains('^[2-9]{1}'))]
-    subset = subset[~(subset["From Hours In Effect"].str.contains("[0]{2}[0-9]{2} [AM,PM]"))]
-    subset = subset[~(subset["From Hours In Effect"].str.contains('[0-9]{2}[6-9]{1}[0-9]'))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains("^[0-9]{4}$"))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains("^[0-9]{2}\ "))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains("^[0-9]{2}$"))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains("^[2-9]{1}"))]
+    subset = subset[
+        ~(subset["From Hours In Effect"].str.contains("[0]{2}[0-9]{2} [AM,PM]"))
+    ]
+    subset = subset[
+        ~(subset["From Hours In Effect"].str.contains("[0-9]{2}[6-9]{1}[0-9]"))
+    ]
     subset = subset[~(subset["To Hours In Effect"] == "0  :")]
     subset = subset[~(subset["To Hours In Effect"] == "0  : AM")]
     subset = subset[~(subset["To Hours In Effect"] == "0  : PM")]
-    subset = subset[~(subset["To Hours In Effect"].str.contains('^[0-9]{4}$'))]
-    subset = subset[~(subset["To Hours In Effect"].str.contains('^[0-9]{2}\ '))]
-    subset = subset[~(subset["To Hours In Effect"].str.contains('^[0-9]{2}$'))]
-    subset = subset[~(subset["To Hours In Effect"].str.contains('^[2-9]{1}'))]
-    subset = subset[~(subset["To Hours In Effect"].str.contains("[0]{2}[0-9]{2} [AM,PM]"))]
-    subset = subset[~(subset["To Hours In Effect"].str.contains('[0-9]{2}[6-9]{1}[0-9]'))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains("^[0-9]{4}$"))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains("^[0-9]{2}\ "))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains("^[0-9]{2}$"))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains("^[2-9]{1}"))]
+    subset = subset[
+        ~(subset["To Hours In Effect"].str.contains("[0]{2}[0-9]{2} [AM,PM]"))
+    ]
+    subset = subset[
+        ~(subset["To Hours In Effect"].str.contains("[0-9]{2}[6-9]{1}[0-9]"))
+    ]
     return subset
 
 
@@ -161,22 +169,25 @@ def make_plot_reg(data, save_path):
 def make_plot_duckdb(data, save_path):
     data = data.compute()
     tic = time.time()
-    duckdb.query('CREATE TEMP TABLE IF NOT EXISTS parsed_times AS SELECT "Violation County", strptime("From Hours In Effect", \'%I%M %p\') AS start_time, strptime("To Hours In Effect", \'%I%M %p\') AS end_time FROM data')
+    duckdb.query(
+        'CREATE TEMP TABLE IF NOT EXISTS parsed_times AS SELECT "Violation County", strptime("From Hours In Effect", \'%I%M %p\') AS start_time, strptime("To Hours In Effect", \'%I%M %p\') AS end_time FROM data'
+    )
     duckdb.query(
         'SELECT "Violation County", mean(TimeDiff) AS AvgTimeDiff FROM (SELECT "Violation County", abs(date_diff(\'minute\', start_time, end_time)) AS TimeDiff FROM parsed_times) GROUP BY "Violation County" ORDER BY AvgTimeDiff DESC'
     ).to_df().plot(
-        kind="barh", 
-        x="Violation County", 
-        legend=False, 
+        kind="barh",
+        x="Violation County",
+        legend=False,
         color="skyblue",
         edgecolor="black",
-        figsize=(12, 12)
+        figsize=(12, 12),
     )
     plt.legend("")
     plt.ylabel(None)
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
     return tic
+
 
 if __name__ == "__main__":
     args = parse_args()
@@ -194,7 +205,7 @@ if __name__ == "__main__":
     else:
         tic = make_plot_duckdb(
             data,
-            save_path=f"../../tasks/03/figs/time_per_borough_{args.data_format}.png"
+            save_path=f"../../tasks/03/figs/time_per_borough_{args.data_format}.png",
         )
 
     print(f"Done in {time.time() - tic:.2f} seconds.")

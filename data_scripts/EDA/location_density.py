@@ -41,7 +41,9 @@ def parse_args():
 def read_data(location, format):
     files = glob.glob(f"{location}*.{format}")
     if format == "parquet":
-        data = pd.concat([pd.read_parquet(file) for file in files[::2]]).sample(frac=0.01)
+        data = pd.concat([pd.read_parquet(file) for file in files[::2]]).sample(
+            frac=0.01
+        )
     elif format == "h5":
         data = pd.concat([read_hdf5(file) for file in files[::2]]).sample(frac=0.01)
     geo_df = gpd.GeoDataFrame(
@@ -52,10 +54,14 @@ def read_data(location, format):
     return geo_df
 
 
-def make_plot(
-    data, nyc_boroughs, save_path
-):
-    ax = gplt.polyplot(nyc_boroughs, figsize=(12,12), projection=gplt.crs.AlbersEqualArea(), zorder=1, edgecolor="k")
+def make_plot(data, nyc_boroughs, save_path):
+    ax = gplt.polyplot(
+        nyc_boroughs,
+        figsize=(12, 12),
+        projection=gplt.crs.AlbersEqualArea(),
+        zorder=1,
+        edgecolor="k",
+    )
     gplt.kdeplot(
         data,
         cmap="rocket_r",
@@ -65,7 +71,7 @@ def make_plot(
         clip=nyc_boroughs.geometry,
         zorder=3,
     )
-    
+
     gplt.pointplot(
         data,
         hue="Violation County",
