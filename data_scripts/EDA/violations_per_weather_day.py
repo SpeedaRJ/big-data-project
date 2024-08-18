@@ -42,7 +42,7 @@ def read_data(location, format):
     if format in ["duckdb", "parquet"]:
         data = dd.read_parquet(location).sample(frac=0.02)
     elif format == "h5":
-        data = dd.concat([read_hdf5(file) for file in files]).sample(frac=0.02)
+        data = dd.concat([dd.from_pandas(read_hdf5(file)) for file in files]).sample(frac=0.02)
     return data
 
 

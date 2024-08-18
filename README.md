@@ -157,14 +157,12 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 | **Plot**                            | **Time for Parquet** | **Time for HDF5** | **Time for DuckDB** |
 | ----------------------------------- | -------------------- | ----------------- | ------------------- |
-| *Location Density*                  | 192.95 sec           | < Missing > sec   | N/A                 |
-| *Distances Statistics*              | 16.62 sec            | < Missing > sec   | N/A                 |
-| *Car Make Per Borough*              | 13.94 sec            | < Missing > sec   | 6.76 sec     |
-| *Interesting PoTs*                  | 130.24 sec           | < Missing > sec   | 28.13 sec     |
-| *Violations Per Weather Condition*  | 26.08 sec            | < Missing > sec   | 5.872 sec     |
-| *Average Violation Time per Borough* | 26.08 sec            | < Missing > sec   | 0.78 sec     |
-
-> TODO: Fill out above table
+| *Location Density [geopandas]*                 | 192.95 sec           | 736.85 sec   | N/A                 |
+| *Distances Statistics*              | 16.62 sec            | 138.86 sec   | N/A                 |
+| *Car Make Per Borough*              | 13.94 sec            | 137.61 sec   | 6.76 sec     |
+| *Interesting PoTs*                  | 130.24 sec           | 674.32 sec   | 28.13 sec     |
+| *Violations Per Weather Condition*  | 26.08 sec            | 138.32 sec   | 5.872 sec     |
+| *Average Violation Time per Borough* | 26.08 sec            | 191.61 sec   | 0.78 sec     |
 
 > Note: Plotting the locations of all points of interest took 2.93 seconds. Since it only involves reading CSV files, it isn't included above.
 
