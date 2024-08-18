@@ -7,3 +7,11 @@ def make_fit_predict(X, y_train, X_test):
     )
     clf.fit(X, y_train)
     return clf.predict(X_test)
+
+
+def make_fit_predict_classification(X, y_train, X_test):
+    clf = xgb.XGBClassifier(
+        n_estimators=1000, max_depth=10, learning_rate=0.3, n_jobs=-1, random_state=42
+    )
+    clf.fit(X, y_train)
+    return clf.predict(X_test), clf.predict_proba(X_test)
