@@ -5,14 +5,14 @@ import sys
 import time
 
 import dask.dataframe as dd
+import dask_ml as dml
+import sklearn_ml as skl
+import xgboost_ml as xgb
 from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 from dask_ml.metrics import mean_squared_error
 from dask_ml.model_selection import train_test_split
-
-import dask_ml as dml
-import xgboost_ml as xgb
-import sklearn_ml as skl
+from dask_ml.preprocessing import Categorizer, OrdinalEncoder
 
 sys.path.insert(
     0,
@@ -55,6 +55,40 @@ def read_data(location, format):
     return data
 
 
+def chunk(s):
+    # for the comments, assume only a single grouping column, the
+    # implementation can handle multiple group columns.
+    #
+    # s is a grouped series. value_counts creates a multi-series like
+    # (group, value): count
+    return s.value_counts()
+
+
+def agg(s):
+    # s is a grouped multi-index series. In .apply the full sub-df will passed
+    # multi-index and all. Group on the value level and sum the counts. The
+    # result of the lambda function is a series. Therefore, the result of the
+    # apply is a multi-index series like (group, value): count
+    return s.apply(lambda s: s.groupby(level=-1, sort=False).sum())
+
+    # # faster version using pandas internals
+    # s = s._selected_obj
+    # return s.groupby(level=list(range(s.index.nlevels))).sum()
+
+
+def finalize(s):
+    # s is a multi-index series of the form (group, value): count. First
+    # manually group on the group part of the index. The lambda will receive a
+    # sub-series with multi index. Next, drop the group part from the index.
+    # Finally, determine the index with the maximum value, i.e., the mode.
+    level = list(range(s.index.nlevels - 1))
+    return (
+        s.groupby(level=level, sort=False)
+        # .apply(lambda s: s.reset_index(level=level, drop=True).argmax())
+        .apply(lambda s: s.reset_index(level=level, drop=True).idxmax())
+    )
+
+
 if __name__ == "__main__":
     cluster = SLURMCluster(cores=4, processes=1, memory="8GB")
     client = Client(cluster)
@@ -66,9 +100,75 @@ if __name__ == "__main__":
     args = parse_args()
     data = read_data(args.input_location, args.data_format)
 
+    mode = dd.Aggregation("mode", chunk, agg, finalize)
+
     tic = time.time()
 
-    # TODO: Add data Preparation and Sub-sampling here
+    daily_ddf = data.groupby("Issue Date").agg(
+        {
+            "tempmax": "first",
+            "tempmin": "first",
+            "temp": "first",
+            "conditions": "first",
+            "humidity": "first",
+            "windspeed": "first",
+            "visibility": "first",
+            "Distance to CMS": "mean",
+            "Distance to CHS": "mean",
+            "Distance to CIL": "mean",
+            "Distance to CIS": "mean",
+            "Distance to CB": "mean",
+        }
+    )
+
+    daily_ddf["count"] = data.groupby("Issue Date").size()
+    daily_ddf = daily_ddf.dropna()
+
+    daily_mode_ddf = data.groupby("Issue Date", sort=False).agg(
+        {
+            "Registration State": mode,
+            "Plate Type": mode,
+            "Violation Code": mode,
+            "Vehicle Body Type": mode,
+            "Vehicle Make": mode,
+            "Issuing Agency": mode,
+            "Violation County": mode,
+        }
+    )
+
+    data = daily_ddf.merge(daily_mode_ddf, on="Issue Date")
+
+    del daily_ddf, daily_mode_ddf
+
+    ce = Categorizer(
+        columns=[
+            "conditions",
+            "Registration State",
+            "Plate Type",
+            "Violation Code",
+            "Vehicle Body Type",
+            "Vehicle Make",
+            "Issuing Agency",
+            "Violation County",
+        ]
+    )
+    data = ce.fit_transform(data)
+
+    enc = OrdinalEncoder(
+        columns=[
+            "conditions",
+            "Registration State",
+            "Plate Type",
+            "Violation Code",
+            "Vehicle Body Type",
+            "Vehicle Make",
+            "Issuing Agency",
+            "Violation County",
+        ]
+    )
+    data = enc.fit_transform(data)
+
+    data = data.persist()
 
     X, y = data.drop(columns=["count"]), data["count"]
     X_train, X_test, y_train, y_test = train_test_split(
@@ -76,6 +176,8 @@ if __name__ == "__main__":
     )
     X_train_, y_train_ = X_train.values.persist(), y_train.values.persist()
     X_test_, y_test_ = X_test.values.persist(), y_test.values.persist()
+
+    X_train_.compute_chunk_sizes(), y_train_.compute_chunk_sizes(), X_test_.compute_chunk_sizes(), y_test_.compute_chunk_sizes()
 
     if args.ml_method == "dask":
         preds = dml.make_fit_predict(X_train_, y_train_, X_test_)
