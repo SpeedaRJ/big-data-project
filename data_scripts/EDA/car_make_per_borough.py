@@ -84,6 +84,7 @@ def make_plot_reg(data, save_path):
 
 def make_plot_duckdb(data, save_path):
     data = data.compute()
+    tic = time.time()
     duckdb.query(
         'CREATE TEMP TABLE IF NOT EXISTS counts AS SELECT "Violation County", "Vehicle Make", count(*) as NumMake FROM data GROUP BY "Violation County", "Vehicle Make" ORDER BY count(*) DESC;'
     )
@@ -114,23 +115,23 @@ def make_plot_duckdb(data, save_path):
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
+    return tic
 
 
 if __name__ == "__main__":
     args = parse_args()
 
-    tic = time.time()
-
     data = read_data(args.input_location, args.data_format)
 
     if not args.data_format == "duckdb":
+        tic = time.time()
         counts_per_borough = compute_counts(data)
         make_plot_reg(
             counts_per_borough,
             save_path=f"../../tasks/03/figs/car_make_per_borough_{args.data_format}.png",
         )
     else:
-        make_plot_duckdb(
+        tic = make_plot_duckdb(
             data,
             save_path=f"../../tasks/03/figs/car_make_per_borough_{args.data_format}.png",
         )

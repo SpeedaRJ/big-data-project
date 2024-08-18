@@ -80,10 +80,7 @@ def save_to_hdf5(data_processed, dropoff, filename):
     ]
     array = np.empty(len(data_processed), dtype=data_types)
     for i, column in enumerate(data_processed.columns):
-        try:
-            array[column] = data_processed[column]
-        except ValueError:
-            array[column] = data_processed[column].str.encode("utf-8")
+        array[column] = data_processed[column]
     with h5py.File(os.path.join(dropoff, f"{filename}.h5"), "w") as h5df:
         h5df.create_dataset("data", data=array, compression="gzip", compression_opts=9)
 

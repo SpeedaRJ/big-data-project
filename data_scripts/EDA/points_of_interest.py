@@ -130,13 +130,84 @@ def make_plot_reg(ms_data, hs_data, li_data, ls_data, b_data, save_path):
     # plt.title("Top 10 Closest Points of Interest w.r.t. Number of Parking Tickets Issued")
     plt.legend(loc="upper left")
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300)
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+
+
+def make_plot_duckdb(ms_data, hs_data, li_data, ls_data, b_data, save_path):
+    nyc_boroughs = gpd.read_file(gplt.datasets.get_path("nyc_boroughs"))
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+
+    nyc_boroughs.plot(ax=ax, alpha=0.4, edgecolor="k")
+
+    pallete = sns.color_palette("deep", 5)
+
+    ms_data.plot(
+        kind="scatter",
+        x="Longitude",
+        y="Latitude",
+        ax=ax,
+        color=pallete[0],
+        alpha=0.8,
+        label="Middle Schools",
+        s=ms_data["Number_MS"] / ms_data["Number_MS"].sum() * 500,
+    )
+    hs_data.plot(
+        kind="scatter",
+        x="Longitude",
+        y="Latitude",
+        ax=ax,
+        color=pallete[1],
+        alpha=0.8,
+        label="High Schools",
+        s=hs_data["Number_HS"] / hs_data["Number_HS"].sum() * 500,
+    )
+    li_data.plot(
+        kind="scatter",
+        x="Longitude",
+        y="Latitude",
+        ax=ax,
+        color=pallete[2],
+        alpha=0.8,
+        label="Individual Landmarks",
+        s=li_data["Number_LI"] / li_data["Number_LI"].sum() * 500,
+    )
+    ls_data.plot(
+        kind="scatter",
+        x="Longitude",
+        y="Latitude",
+        ax=ax,
+        color=pallete[3],
+        alpha=0.8,
+        label="Scenic Landmarks",
+        s=ls_data["Number_LS"] / ls_data["Number_LS"].sum() * 500,
+    )
+    b_data.plot(
+        kind="scatter",
+        x="Longitude",
+        y="Latitude",
+        ax=ax,
+        color=pallete[4],
+        alpha=0.8,
+        label="Businesses",
+        s=b_data["Number_B"] / b_data["Number_B"].sum() * 500,
+    )
+
+    # ctx.add_basemap(ax, crs=nyc_boroughs.crs.to_string(), zoom=12)
+
+    # Fallback if OpenStreetMap is not available
+    ctx.add_basemap(
+        ax, crs=nyc_boroughs.crs.to_string(), source=ctx.providers.CartoDB.Positron
+    )
+
+    # plt.title("Top 10 Closest Points of Interest w.r.t. Number of Parking Tickets Issued")
+    plt.legend(loc="upper left")
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
 
 
 if __name__ == "__main__":
     args = parse_args()
-
-    tic = time.time()
 
     data = read_data(args.input_location, args.data_format)
 
@@ -162,6 +233,7 @@ if __name__ == "__main__":
         )
 
     if not args.data_format == "duckdb":
+        tic = time.time()
         ms_freq = compute_points(data, ms_data, "Closest Middle School", "name")
         hs_freq = compute_points(data, hs_data, "Closest High School", "school_name")
         li_freq = compute_points(
@@ -178,6 +250,13 @@ if __name__ == "__main__":
             save_path=f"../../tasks/03/figs/top_points_of_interest_{args.data_format}.png",
         )
     else:
+        data = data.compute()
+        ms_data = ms_data.compute()
+        hs_data = hs_data.compute()
+        li_data = li_data.compute()
+        ls_data = ls_data.compute()
+        b_data = b_data.compute()
+        tic = time.time()
         ms_freq = duckdb.query(
             'SELECT ms_data.name, Latitude, Longitude, Number_MS FROM ms_data JOIN (SELECT "Closest Middle School" as name, count(*) as Number_MS FROM data GROUP BY "Closest Middle School") AS tmp ON ms_data.name = tmp.name ORDER BY Number_MS DESC LIMIT 10'
         ).to_df()
@@ -193,7 +272,7 @@ if __name__ == "__main__":
         b_freq = duckdb.query(
             'SELECT b_data."Business Name", Latitude, Longitude, Number_B FROM b_data JOIN (SELECT "Closest Business" as name, count(*) as Number_B FROM data GROUP BY "Closest Business") AS tmp ON b_data."Business Name" = tmp.name ORDER BY Number_B DESC LIMIT 10'
         ).to_df()
-        make_plot_reg(
+        make_plot_duckdb(
             ms_freq,
             hs_freq,
             li_freq,

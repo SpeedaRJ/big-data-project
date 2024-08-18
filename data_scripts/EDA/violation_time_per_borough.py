@@ -103,7 +103,6 @@ def subset_data(data):
     subset = subset[~(subset["To Hours In Effect"].str.contains('^[2-9]{1}'))]
     subset = subset[~(subset["To Hours In Effect"].str.contains("[0]{2}[0-9]{2} [AM,PM]"))]
     subset = subset[~(subset["To Hours In Effect"].str.contains('[0-9]{2}[6-9]{1}[0-9]'))]
-    subset = subset.compute()
     return subset
 
 
@@ -161,7 +160,8 @@ def make_plot_reg(data, save_path):
 
 def make_plot_duckdb(data, save_path):
     data = data.compute()
-    duckdb.query('CREATE TEMP TABLE IF NOT EXISTS parsed_times AS SELECT "Violation County", strptime("From Hours In Effect", \'%I%M %p\') AS start_time, strptime("To Hours In Effect", \'%I%M %p\') AS end_time FROM subset')
+    tic = time.time()
+    duckdb.query('CREATE TEMP TABLE IF NOT EXISTS parsed_times AS SELECT "Violation County", strptime("From Hours In Effect", \'%I%M %p\') AS start_time, strptime("To Hours In Effect", \'%I%M %p\') AS end_time FROM data')
     duckdb.query(
         'SELECT "Violation County", mean(TimeDiff) AS AvgTimeDiff FROM (SELECT "Violation County", abs(date_diff(\'minute\', start_time, end_time)) AS TimeDiff FROM parsed_times) GROUP BY "Violation County" ORDER BY AvgTimeDiff DESC'
     ).to_df().plot(
@@ -172,23 +172,27 @@ def make_plot_duckdb(data, save_path):
         edgecolor="black",
         figsize=(12, 12)
     )
+    plt.legend("")
+    plt.ylabel(None)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300)
+    return tic
 
 if __name__ == "__main__":
     args = parse_args()
-
-    tic = time.time()
 
     data = read_data(args.input_location, args.data_format)
 
     data = subset_data(data)
 
     if not args.data_format == "duckdb":
+        tic = time.time()
         make_plot_reg(
             data,
             save_path=f"../../tasks/03/figs/time_per_borough_{args.data_format}.png",
         )
     else:
-        make_plot_duckdb(
+        tic = make_plot_duckdb(
             data,
             save_path=f"../../tasks/03/figs/time_per_borough_{args.data_format}.png"
         )

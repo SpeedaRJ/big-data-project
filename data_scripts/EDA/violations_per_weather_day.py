@@ -68,25 +68,26 @@ def make_plot_reg(
     plt.savefig(save_path, dpi=300)
 
 
-def make_plot_duckdb(data, save_path):
+def make_plot_duckdb(data, weather_data, save_path):
     data = data.compute()
+    weather_data = weather_data.compute()
+    tic = time.time()
     duckdb.query("CREATE TEMP TABLE IF NOT EXISTS counts AS SELECT conditions, count(*) AS NumTickets FROM data GROUP BY conditions ORDER BY count(*) ASC")
     duckdb.query("CREATE TEMP TABLE IF NOT EXISTS weather_days AS SELECT conditions, count(*) AS NumDays FROM weather_data GROUP BY conditions ORDER BY count(*) ASC")
-    duckdb.query('SELECT counts.conditions, (NumTickets / NumDays) AS Ratio FROM counts JOIN weather_days ON counts.conditions = weather_days.conditions ORDER BY Ratio ASC').to_df().plot(
+    duckdb.query('SELECT counts.conditions AS conditions, (NumTickets / NumDays) AS Ratio FROM counts JOIN weather_days ON counts.conditions = weather_days.conditions ORDER BY Ratio ASC').to_df().plot(
         kind="barh",
         figsize=(10, 10),
         title="Number of tickets per day of Weather Condition",
         color="skyblue",
-        x="counts.conditions",
+        x="conditions",
     )
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
+    return tic
 
 
 if __name__ == "__main__":
     args = parse_args()
-
-    tic = time.time()
 
     data = read_data(args.input_location, args.data_format)
 
@@ -95,12 +96,17 @@ if __name__ == "__main__":
     )
 
     if not args.data_format == "duckdb":
+        tic = time.time()
         make_plot_reg(
             data,
             weather_data,
             save_path=f"../../tasks/03/figs/tickets_per_day_of_weather_condition_{args.data_format}.png",
         )
     else:
-        make_plot_duckdb()
+        tic = make_plot_duckdb(
+            data,
+            weather_data,
+            save_path=f"../../tasks/03/figs/tickets_per_day_of_weather_condition_{args.data_format}.png"
+        )
 
     print(f"Done in {time.time() - tic:.2f} seconds.")
