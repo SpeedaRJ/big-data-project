@@ -5,6 +5,7 @@ import sys
 import time
 
 import dask.dataframe as dd
+import duckdb
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -67,6 +68,21 @@ def make_plot_reg(
     plt.savefig(save_path, dpi=300)
 
 
+def make_plot_duckdb(data, save_path):
+    data = data.compute()
+    duckdb.query("CREATE TEMP TABLE IF NOT EXISTS counts AS SELECT conditions, count(*) AS NumTickets FROM data GROUP BY conditions ORDER BY count(*) ASC")
+    duckdb.query("CREATE TEMP TABLE IF NOT EXISTS weather_days AS SELECT conditions, count(*) AS NumDays FROM weather_data GROUP BY conditions ORDER BY count(*) ASC")
+    duckdb.query('SELECT counts.conditions, (NumTickets / NumDays) AS Ratio FROM counts JOIN weather_days ON counts.conditions = weather_days.conditions ORDER BY Ratio ASC').to_df().plot(
+        kind="barh",
+        figsize=(10, 10),
+        title="Number of tickets per day of Weather Condition",
+        color="skyblue",
+        x="counts.conditions",
+    )
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300)
+
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -85,6 +101,6 @@ if __name__ == "__main__":
             save_path=f"../../tasks/03/figs/tickets_per_day_of_weather_condition_{args.data_format}.png",
         )
     else:
-        ...
+        make_plot_duckdb()
 
     print(f"Done in {time.time() - tic:.2f} seconds.")

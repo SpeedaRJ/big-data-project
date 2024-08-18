@@ -140,16 +140,21 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 - Merging the business information, largely follows the above procedure, with a few additional steps: Instead of retrieving the single closest entity to the location of the parking violation, we retrieve `n=1` entities, ordered by distance. We then filter these entities based on the `Issue Date` column to check if it falls between the businesses license creation and license expiration dates. We retrieve the entity in the first row of said result. If no result is given, we perform a recursive search with `n=n * 2`. We do this to limit the computational time, but still ensure we get a result for each entry. Here, instead of the above pair, we store `(<closest entity name>, <industry of ce>, <distance to ce>)`, since we tough this information might be interesting.
 
 ### Merging Times
-| **Dataset**                          | **Parquet-Dask** | **HDF5-Dask** | **Parquet-DuckDB** |
-| ------------------------------------ | ---------------- | ------------- | ------------------ |
-| *Weather augmentations*              | 166.04 sec       | sum([]) sec   | sum([]) sec        |
-| *Middle School augmentations*        | 6169.37 sec      | sum([]) sec   | sum([]) sec        |
-| *High School augmentations*          | 7118.34 sec      | sum([]) sec   | sum([]) sec        |
-| *Individual Landmarks augmentations* | 6164.79 sec      | sum([]) sec   | sum([]) sec        |
-| *Scenic Landmarks*                   | 3475.09 sec      | sum([]) sec   | sum([]) sec        |
-| *Businesses augmentations*           | 120755 sec       | sum([]) sec   | sum([]) sec        |
+| **Dataset**                          | **Parquet-Dask [sec]** | **HDF5-Dask [min]** |
+| ------------------------------------ | ---------------------- | ------------------- |
+| *Weather augmentations*              | 166.04                 | sum([122.94, ])     |
+| *Middle School augmentations*        | 6169.37                | sum([191.43, ])     |
+| *High School augmentations*          | 7118.34                | sum([205.17, ])     |
+| *Individual Landmarks augmentations* | 6164.79                | sum([200.79, ])     |
+| *Scenic Landmarks*                   | 3475.09                | sum([174.15, ])     |
+| *Businesses augmentations*           | 120755                 | sum([1413.59, ])    |
 
 > TODO: Fill out above table
+100%|██████████| 162222/162222 [00:12<00:00, 13493.02it/s]
+Generating reference dataframe: 100%|██████████| 8488014/8488014 [2:57:00<00:00, 799.18it/s]   
+(8488014, 58)
+CPU times: user 3h 14min 18s, sys: 13.4 s, total: 3h 14min 32s
+Wall time: 3h 14min 24s
 
 > Note: The directory `tasks\02` contains `sh` files, that run the above mentioned merging procedures for each year of the data separately. They also return the time required for the total merging time for all years with the selected augmentation dataset. These files were used to obtain the above results.
 
@@ -157,13 +162,14 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 ## Task 3
 
-| **Plot**                           | **Time for Parquet** | **Time for HDF5** | **Time for DuckDB** |
-| ---------------------------------- | -------------------- | ----------------- | ------------------- |
-| *Location Density*                 | 192.95 sec           | < Missing > sec   | N/A                 |
-| *Distances Statistics*             | 16.62 sec            | < Missing > sec   | N/A                 |
-| *Car Make Per Borough*             | 13.94 sec            | < Missing > sec   | < Missing > sec     |
-| *Interesting PoTs*                 | 130.24 sec           | < Missing > sec   | < Missing > sec     |
-| *Violations Per Weather Condition* | 26.08 sec            | < Missing > sec   | < Missing > sec     |
+| **Plot**                            | **Time for Parquet** | **Time for HDF5** | **Time for DuckDB** |
+| ----------------------------------- | -------------------- | ----------------- | ------------------- |
+| *Location Density*                  | 192.95 sec           | < Missing > sec   | N/A                 |
+| *Distances Statistics*              | 16.62 sec            | < Missing > sec   | N/A                 |
+| *Car Make Per Borough*              | 13.94 sec            | < Missing > sec   | < Missing > sec     |
+| *Interesting PoTs*                  | 130.24 sec           | < Missing > sec   | < Missing > sec     |
+| *Violations Per Weather Condition*  | 26.08 sec            | < Missing > sec   | < Missing > sec     |
+| *Average Violation Time per Street* | 26.08 sec            | < Missing > sec   | < Missing > sec     |
 
 > TODO: Fill out above table
 

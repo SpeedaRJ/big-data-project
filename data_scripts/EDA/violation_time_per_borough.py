@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 
 import dask.dataframe as dd
+import duckdb
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -64,6 +65,9 @@ def subset_data(data):
         .replace("23", "11", regex=True)
         .replace("0000", "1200", regex=True)
         .replace("0010", "1210", regex=True)
+        .replace("1700", "0500", regex=True)
+        .replace("1400", "0200", regex=True)
+        .replace("2200", "1000", regex=True)
     )
     subset["To Hours In Effect"] = (
         subset["To Hours In Effect"]
@@ -77,7 +81,29 @@ def subset_data(data):
         .replace("23", "11", regex=True)
         .replace("0000", "1200", regex=True)
         .replace("0010", "1210", regex=True)
+        .replace("1700", "0500", regex=True)
+        .replace("1400", "0200", regex=True)
+        .replace("2200", "1000", regex=True)
     )
+    subset = subset[~(subset["From Hours In Effect"] == "0  :")]
+    subset = subset[~(subset["From Hours In Effect"] == "0  : AM")]
+    subset = subset[~(subset["From Hours In Effect"] == "0  : PM")]
+    subset = subset[~(subset["From Hours In Effect"].str.contains('^[0-9]{4}$'))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains('^[0-9]{2}\ '))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains('^[0-9]{2}$'))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains('^[2-9]{1}'))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains("[0]{2}[0-9]{2} [AM,PM]"))]
+    subset = subset[~(subset["From Hours In Effect"].str.contains('[0-9]{2}[6-9]{1}[0-9]'))]
+    subset = subset[~(subset["To Hours In Effect"] == "0  :")]
+    subset = subset[~(subset["To Hours In Effect"] == "0  : AM")]
+    subset = subset[~(subset["To Hours In Effect"] == "0  : PM")]
+    subset = subset[~(subset["To Hours In Effect"].str.contains('^[0-9]{4}$'))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains('^[0-9]{2}\ '))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains('^[0-9]{2}$'))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains('^[2-9]{1}'))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains("[0]{2}[0-9]{2} [AM,PM]"))]
+    subset = subset[~(subset["To Hours In Effect"].str.contains('[0-9]{2}[6-9]{1}[0-9]'))]
+    subset = subset.compute()
     return subset
 
 
@@ -133,6 +159,20 @@ def make_plot_reg(data, save_path):
     plt.savefig(save_path, dpi=300)
 
 
+def make_plot_duckdb(data, save_path):
+    data = data.compute()
+    duckdb.query('CREATE TEMP TABLE IF NOT EXISTS parsed_times AS SELECT "Violation County", strptime("From Hours In Effect", \'%I%M %p\') AS start_time, strptime("To Hours In Effect", \'%I%M %p\') AS end_time FROM subset')
+    duckdb.query(
+        'SELECT "Violation County", mean(TimeDiff) AS AvgTimeDiff FROM (SELECT "Violation County", abs(date_diff(\'minute\', start_time, end_time)) AS TimeDiff FROM parsed_times) GROUP BY "Violation County" ORDER BY AvgTimeDiff DESC'
+    ).to_df().plot(
+        kind="barh", 
+        x="Violation County", 
+        legend=False, 
+        color="skyblue",
+        edgecolor="black",
+        figsize=(12, 12)
+    )
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -148,6 +188,9 @@ if __name__ == "__main__":
             save_path=f"../../tasks/03/figs/time_per_borough_{args.data_format}.png",
         )
     else:
-        ...
+        make_plot_duckdb(
+            data,
+            save_path=f"../../tasks/03/figs/time_per_borough_{args.data_format}.png"
+        )
 
     print(f"Done in {time.time() - tic:.2f} seconds.")

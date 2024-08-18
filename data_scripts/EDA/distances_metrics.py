@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     make_plot(
         data,
-        save_path=f"../../tasks/03/figs/distances_statistical_description_{args.data_format}.png",
+        save_path=f"../../tasks/03/figs/distances_statistical_description.png",
     )
 
     print(f"Done in {time.time() - tic:.2f} seconds.")
