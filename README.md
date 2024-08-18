@@ -112,7 +112,7 @@ In order to allow for better processing and data enrichment down the line, we th
 
 | **File Name**  | **CSV Size [GB]** | **Parquet Size [GB]** | **HDF5 Size [GB]** |
 | -------------- | ----------------- | --------------------- | ------------------ |
-| *full_dataset* | 16.33             | 3.28                  | 2.62               |
+| *full_dataset* | 16.33             | 4.6                  | 71               |
 
 To pre-process the CSV files, run the following command, where the paths refer to where the original raw `csv` files are located, and where you want to store the full dataset in parquet and hdf5 formats:
 ```sh
@@ -147,9 +147,7 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 | *High School augmentations*          | 118.64                | 224.87     |
 | *Individual Landmarks augmentations* | 102.75                | 218.64    |
 | *Scenic Landmarks*                   | 57.92                | 189.38     |
-| *Businesses augmentations*           | 2012.58                 | sum([1413.59, ])    |
-
-> TODO: Fill out above table
+| *Businesses augmentations*           | 2012.58                 | 1607.84    |
 
 > Note: The directory `tasks\02` contains `sh` files, that run the above mentioned merging procedures for each year of the data separately. They also return the time required for the total merging time for all years with the selected augmentation dataset. These files were used to obtain the above results.
 
