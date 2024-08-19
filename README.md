@@ -112,7 +112,7 @@ In order to allow for better processing and data enrichment down the line, we th
 
 | **File Name**  | **CSV Size [GB]** | **Parquet Size [GB]** | **HDF5 Size [GB]** |
 | -------------- | ----------------- | --------------------- | ------------------ |
-| *full_dataset* | 16.33             | 3.28                  | 2.62               |
+| *full_dataset* | 16.33             | 4.6                  | 71               |
 
 To pre-process the CSV files, run the following command, where the paths refer to where the original raw `csv` files are located, and where you want to store the full dataset in parquet and hdf5 formats:
 ```sh
@@ -147,9 +147,7 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 | *High School augmentations*          | 118.64                | 224.87     |
 | *Individual Landmarks augmentations* | 102.75                | 218.64    |
 | *Scenic Landmarks*                   | 57.92                | 189.38     |
-| *Businesses augmentations*           | 2012.58                 | sum([1413.59, ])    |
-
-> TODO: Fill out above table
+| *Businesses augmentations*           | 2012.58                 | 1607.84    |
 
 > Note: The directory `tasks\02` contains `sh` files, that run the above mentioned merging procedures for each year of the data separately. They also return the time required for the total merging time for all years with the selected augmentation dataset. These files were used to obtain the above results.
 
@@ -159,14 +157,12 @@ Merging procedures can be found in the `data_scripts\data_augmentations` directo
 
 | **Plot**                            | **Time for Parquet** | **Time for HDF5** | **Time for DuckDB** |
 | ----------------------------------- | -------------------- | ----------------- | ------------------- |
-| *Location Density*                  | 192.95 sec           | < Missing > sec   | N/A                 |
-| *Distances Statistics*              | 16.62 sec            | < Missing > sec   | N/A                 |
-| *Car Make Per Borough*              | 13.94 sec            | < Missing > sec   | 6.76 sec     |
-| *Interesting PoTs*                  | 130.24 sec           | < Missing > sec   | 28.13 sec     |
-| *Violations Per Weather Condition*  | 26.08 sec            | < Missing > sec   | 5.872 sec     |
-| *Average Violation Time per Borough* | 26.08 sec            | < Missing > sec   | 0.78 sec     |
-
-> TODO: Fill out above table
+| *Location Density [geopandas]*                 | 192.95 sec           | 736.85 sec   | N/A                 |
+| *Distances Statistics*              | 16.62 sec            | 138.86 sec   | N/A                 |
+| *Car Make Per Borough*              | 13.94 sec            | 137.61 sec   | 6.76 sec     |
+| *Interesting PoTs*                  | 130.24 sec           | 674.32 sec   | 28.13 sec     |
+| *Violations Per Weather Condition*  | 26.08 sec            | 138.32 sec   | 5.872 sec     |
+| *Average Violation Time per Borough* | 26.08 sec            | 191.61 sec   | 0.78 sec     |
 
 > Note: Plotting the locations of all points of interest took 2.93 seconds. Since it only involves reading CSV files, it isn't included above.
 

@@ -42,7 +42,7 @@ def read_data(location, format):
     if format == "parquet":
         data = dd.read_parquet(location).sample(frac=0.02)
     elif format == "h5":
-        data = dd.concat([read_hdf5(file) for file in files]).sample(frac=0.02)
+        data = dd.concat([dd.from_pandas(read_hdf5(file)) for file in files]).sample(frac=0.02)
     data = data.rename(columns={"Distance to CIS": "Distance to CSL"})
     return data
 
@@ -80,9 +80,9 @@ def make_plot(data, save_path):
 if __name__ == "__main__":
     args = parse_args()
 
-    tic = time.time()
-
     data = read_data(args.input_location, args.data_format)
+
+    tic = time.time()
 
     make_plot(
         data,
