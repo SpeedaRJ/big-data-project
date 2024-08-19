@@ -53,7 +53,7 @@ def read_data(location, format):
         data = dd.read_parquet(location)
     elif format == "h5":
         files = glob.glob(f"{location}*.{format}")
-        data = dd.concat([read_hdf5(file) for file in files])
+        data = dd.concat([dd.from_pandas(read_hdf5(file)) for file in files])
     return data
 
 

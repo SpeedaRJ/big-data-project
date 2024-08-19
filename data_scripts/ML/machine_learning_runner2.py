@@ -53,7 +53,7 @@ def read_data(location, format):
         data = dd.read_parquet(location)
     elif format == "h5":
         files = glob.glob(f"{location}*.{format}")
-        data = dd.concat([read_hdf5(file) for file in files])
+        data = dd.concat([dd.from_pandas(read_hdf5(file)) for file in files])
     return data
 
 
@@ -93,12 +93,12 @@ def finalize(s):
 
 if __name__ == "__main__":
     print("Getting Workers")
-    cluster = LocalCluster(n_workers=8, processes=1, memory_limit="8GB")
+    cluster = LocalCluster(n_workers=16, processes=1, memory_limit="8GB")
     client = Client(cluster)
 
     print("Reading Data")
     args = parse_args()
-    with performance_report(filename=f"../../tasks/05/dask_ml_report_{args.data_format}_{args.ml_method}.html"):
+    with performance_report(filename=f"../../tasks/05/dask_ml_report_2_{args.data_format}_{args.ml_method}.html"):
         data = read_data(args.input_location, args.data_format)
 
         mode = dd.Aggregation("mode", chunk, agg, finalize)
